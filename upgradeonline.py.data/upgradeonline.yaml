@@ -1,0 +1,12 @@
+CBD_TESTS_DIR: "CBD_TESTS_DIR_DEFAULT"
+cbd_dev: "CBD_DEV_DEFAULT"
+fio_size: 1G
+cbd_daemon_timeout: !mux
+        1sec:
+                cbdd_timeout: 1
+        tensec:
+                cbdd_timeout: 10
+        30sec:
+                cbdd_timeout: 30
+        onemin:
+                cbdd_timeout: 60

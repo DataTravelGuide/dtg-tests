@@ -1,0 +1,48 @@
+dev_path: "CBD_DEV_PATH"
+runtime: "10"
+ioengine: "libaio"
+output_file: "OUTPUT_FILE"
+rw: !mux
+        read:
+                rw_type: "read"
+                result_type: "read"
+        write:
+                rw_type: "write"
+                result_type: "write"
+        randread:
+                rw_type: "randread"
+                result_type: "read"
+        randwrite:
+                rw_type: "randwrite"
+                result_type: "write"
+        rw:
+                rw_type: "rw"
+                result_type: "read write"
+                rwmixread: 70
+        randrw:
+                rw_type: "randrw"
+                result_type: "read write"
+                rwmixread: 70
+
+bs: !mux
+        1K:
+                block_size: "1K"
+        4K:
+                block_size: "4K"
+        8K:
+                block_size: "8K"
+        1M:
+                block_size: "1M"
+
+iodepth: !mux
+        1iodepth:
+                iodepth: "1"
+        4iodepth:
+                iodepth: "4"
+        32iodepth:
+                iodepth: "32"
+numjobs: !mux
+        1numjobs:
+                numjobs: "1"
+        4numjobs:
+                numjobs: "4"

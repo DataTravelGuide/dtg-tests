@@ -1,0 +1,13 @@
+Run cbd-tests
+
+1. install packages:
+
+# pip install avocado-framework avocado-framework-plugin-varianter-yaml-to-mux avocado-framework-plugin-result-html
+# apt install bpfcc-tools
+
+2. Edit local_conf and an example as below:
+
+CBD_TESTS_XFSTESTS_DIR="/data/xfstests"
+
+3. run test:
+# bash test_all.sh

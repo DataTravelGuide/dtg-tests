@@ -1,0 +1,25 @@
+xfstests_dir: 'XFSTESTS_DIR_DEFAULT'
+cbd_dir: "CBD_DIR_DEFAULT"
+cbd_tests_dir: "CBD_TESTS_DIR_DEFAULT"
+scratch_mnt: 'SCRATCH_MNT_DEFAULT'
+test_mnt: 'TEST_MNT_DEFAULT'
+test_set: '-g quick -g generic/rw -E ./exclude.exclude'
+cbdd_timeout: !mux
+        no_timeout:
+                cbdd_timeout: 0
+        30sec:
+                cbdd_timeout: 30
+fs_type: !mux
+        fs_xfs:
+                fs: 'xfs'
+                # Exclude only if test_range not provided
+                exclude: 'null'
+disk_type: !mux
+        file:
+                disk_type: "file"
+                disk_test: 'TEST_FILE_DEV_DEFAULT'
+                disk_scratch: 'SCRATCH_FILE_DEV_DEFAULT'
+        cache:
+                disk_type: "cache"
+                disk_test: 'TEST_CACHE_DEV_DEFAULT'
+                disk_scratch: 'SCRATCH_CACHE_DEV_DEFAULT'
