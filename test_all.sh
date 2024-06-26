@@ -20,6 +20,7 @@ if [ "$2" = "dryrun" ]; then
 	echo "dryrun....."
 fi
 
+source ./local_conf
 . ./utils/utils.sh
 
 source /etc/os-release
@@ -46,17 +47,12 @@ setup
 
 # replace default options with the real options
 cd ${CBD_TESTS_DIR}
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml XFSTESTS_DIR_DEFAULT ${CBD_TESTS_XFSTESTS_DIR}
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml CBD_DIR_DEFAULT ${CBD_DIR}
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml CBD_TESTS_DIR_DEFAULT ${CBD_TESTS_DIR}
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml SCRATCH_MNT_DEFAULT ${XFSTESTS_SCRATCH_MNT}
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml TEST_MNT_DEFAULT ${XFSTESTS_TEST_MNT}
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml TEST_FILE_DEV_DEFAULT /dev/cbd0
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml SCRATCH_FILE_DEV_DEFAULT /dev/cbd1
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml TEST_MEM_DEV_DEFAULT /dev/cbd3
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml SCRATCH_MEM_DEV_DEFAULT /dev/cbd4
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml TEST_CACHE_DEV_DEFAULT	${cache_dev_1}
-#replace_option xfstests.py.data/xfstests${SUFFIX}.yaml SCRATCH_CACHE_DEV_DEFAULT ${cache_dev_2}
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml XFSTESTS_DIR_DEFAULT ${CBD_TESTS_XFSTESTS_DIR}
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml CBD_TESTS_DIR_DEFAULT ${CBD_TESTS_DIR}
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml SCRATCH_MNT_DEFAULT ${XFSTESTS_SCRATCH_MNT}
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml TEST_MNT_DEFAULT ${XFSTESTS_TEST_MNT}
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml TEST_DEV_DEFAULT /dev/cbd0
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml SCRATCH_DEV_DEFAULT /dev/cbd1
 
 
 replace_option fio.py.data/fio${SUFFIX}.yaml CBD_DEV_PATH /dev/cbd0

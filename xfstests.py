@@ -29,14 +29,6 @@ class Xfstests(Test):
         self.proc.stop(1)
         self.log.info("cbdd killer stopped")
 
-    def do_config(self, dev):
-        os.chdir(self.cbd_dir)
-        cmd = str("cbdadm config --cbdid %s --data-pages-reserve-percnt 0" % (dev))
-        result = process.run(cmd, ignore_status=True)
-        self.log.info("config result: %s" % (result))
-        return (result.exit_status == 0)
-
-
     def setUp(self):
         self.xfstests_dir = self.params.get('xfstests_dir')
         self.cbd_dir = self.params.get('cbd_dir')
@@ -45,7 +37,6 @@ class Xfstests(Test):
             'scratch_mnt', default='/mnt/scratch')
         self.test_mnt = self.params.get('test_mnt', default='/mnt/test')
         self.fs_to_test = self.params.get('fs', default='ext4')
-        self.disk_type = self.params.get('disk_type')
 
         if process.system('which mkfs.%s' % self.fs_to_test,
                           ignore_status=True):
@@ -99,7 +90,6 @@ class Xfstests(Test):
                     sources.write('MOUNT_OPTIONS="%s"\n' % self.mount_opt)
 
             for ite, dev in enumerate(self.devices):
-                self.do_config(dev)
                 dev_obj = partition.Partition(dev)
                 dev_obj.mkfs(fstype=self.fs_to_test, args=self.mkfs_opt)
 
@@ -112,8 +102,6 @@ class Xfstests(Test):
             self.start_cbdd_killer()
 
     def test(self):
-        if (self.disk_type == "mem" and self.cbdd_timeout):
-            return
         failures = False
         os.chdir(self.xfstests_dir)
 
