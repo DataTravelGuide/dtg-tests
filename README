@@ -9,5 +9,12 @@ Run cbd-tests
 
 CBD_TESTS_XFSTESTS_DIR="/data/xfstests"
 
+XFSTESTS_SCRATCH_MNT="/mnt/scratch"
+XFSTESTS_TEST_MNT="/mnt/test"
+
+FIOTEST_OUTFILE="output.cvs"
+
+CBD_TESTS_POST_TEST_CMDS=""
+
 3. run test:
 # bash test_all.sh
