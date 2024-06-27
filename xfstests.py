@@ -53,7 +53,6 @@ class Xfstests(Test):
         self.cbdd_timeout = self.params.get('cbdd_timeout', default=0)
         self.test_set = self.params.get('test_set', default="-g auto")
 
-        process.run("dmesg -C ", sudo=True)
         # mkfs for devices
         if self.devices:
             cfg_file = os.path.join(self.xfstests_dir, 'local.config')
@@ -129,7 +128,6 @@ class Xfstests(Test):
 
         process.system('wipefs -a %s' % (self.test_dev),
                        sudo=True, ignore_status=True)
-        self.whiteboard = process.system_output("dmesg").decode()
 
     @staticmethod
     def _parse_error_message(output):
