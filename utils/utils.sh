@@ -42,6 +42,7 @@ cleanup ()
 
 	echo "transport_id=0" > /sys/bus/cbd/transport_unregister 
 
+	rmmod cbd
 	rmmod brd
 }
 
