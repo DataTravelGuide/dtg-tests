@@ -15,7 +15,6 @@ setup ()
 	modprobe cbd
 
 	echo "path=/dev/pmem0,hostname=node1,force=1,format=1" >  /sys/bus/cbd/transport_register
-	echo "op=host-register,hostname=node-1" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=backend-start,path=/dev/ram0p2" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=backend-start,path=/dev/ram0p3" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=backend-start,path=/dev/sdb" > /sys/bus/cbd/devices/transport0/adm
