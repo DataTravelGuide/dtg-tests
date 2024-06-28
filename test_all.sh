@@ -5,8 +5,6 @@ date_str=`date "+%Y_%m_%d_%H_%M_%S"`
 
 DRY_RUN=0
 
-CBD_TESTS_DIR=`pwd`
-
 SUFFIX=""
 if [ "$1" = "quick" ]; then
 	SUFFIX="_quick"
@@ -21,6 +19,8 @@ if [ "$2" = "dryrun" ]; then
 fi
 
 source ./local_conf
+CBD_TESTS_DIR=`pwd`
+
 . ./utils/utils.sh
 
 source /etc/os-release
