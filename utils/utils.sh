@@ -17,11 +17,9 @@ setup ()
 	echo "path=/dev/pmem0,hostname=node1,force=1,format=1" >  /sys/bus/cbd/transport_register
 	echo "op=backend-start,path=/dev/ram0p2" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=backend-start,path=/dev/ram0p3" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=backend-start,path=/dev/sdb" > /sys/bus/cbd/devices/transport0/adm
 
 	echo "op=dev-start,backend_id=0,queues=1" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=dev-start,backend_id=1,queues=1" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=dev-start,backend_id=2,queues=1" > /sys/bus/cbd/devices/transport0/adm
 
 	mkfs.xfs -f /dev/cbd0
 }
@@ -29,16 +27,14 @@ setup ()
 
 cleanup ()
 {
-	umount /mnt
-	umount /media
+	umount $XFSTESTS_SCRATCH_MNT
+	umount $XFSTESTS_TEST_MNT
 
 	echo "op=dev-stop,dev_id=0" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=dev-stop,dev_id=1" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=dev-stop,dev_id=2" > /sys/bus/cbd/devices/transport0/adm
 	sleep 3
 	echo "op=backend-stop,backend_id=0" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=backend-stop,backend_id=1" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=backend-stop,backend_id=2" > /sys/bus/cbd/devices/transport0/adm
 
 	echo "transport_id=0" > /sys/bus/cbd/transport_unregister 
 
