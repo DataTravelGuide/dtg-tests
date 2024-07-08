@@ -21,7 +21,7 @@ fi
 source ./local_conf
 CBD_TESTS_DIR=`pwd`
 
-. ./utils/utils.sh
+source ./utils/utils.sh
 
 source /etc/os-release
 case "$ID" in
@@ -68,6 +68,16 @@ fi
 if [ ! -z "$CBD_TESTS_POST_TEST_CMDS" ]; then
 	${CBD_TESTS_POST_TEST_CMDS}
 fi
+
+replace_option fio.py.data/fio${SUFFIX}.yaml "output.cvs" OUTPUT_FILE
+replace_option fio.py.data/fio${SUFFIX}.yaml /dev/cbd0 CBD_DEV_PATH
+
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml /dev/cbd1 SCRATCH_DEV_DEFAULT
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml /dev/cbd0 TEST_DEV_DEFAULT
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml ${XFSTESTS_TEST_MNT} TEST_MNT_DEFAULT
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml ${XFSTESTS_SCRATCH_MNT} SCRATCH_MNT_DEFAULT
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml ${CBD_TESTS_DIR} CBD_TESTS_DIR_DEFAULT
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml ${CBD_TESTS_XFSTESTS_DIR} XFSTESTS_DIR_DEFAULT
 
 # cleanup 
 cleanup
