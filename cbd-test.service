@@ -1,0 +1,12 @@
+[Unit]
+Description=Cbd Test
+After=sshd.service
+
+[Service]
+TimeoutStopSec=infinity
+RemainAfterExit=yes
+Environment=INIT_VERSION=systemd
+ExecStart=/workspace/zeng/cbd-tests/cbd_test.sh
+
+[Install]
+WantedBy=multi-user.target
