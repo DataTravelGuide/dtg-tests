@@ -12,5 +12,9 @@ fs_type: !mux
                 # Exclude only if test_range not provided
                 exclude: 'null'
 disk_type: !mux
-        disk_test: 'TEST_DEV_DEFAULT'
-        disk_scratch: 'SCRATCH_DEV_DEFAULT'
+        cbd:
+          disk_test: 'TEST_DEV_DEFAULT'
+          disk_scratch: 'SCRATCH_DEV_DEFAULT'
+        cache_dev:
+          disk_test: 'CACHE_TEST_DEFAULT'
+          disk_scratch: 'CACHE_SCRATCH_DEFAULT'

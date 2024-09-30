@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -ex
 
 date_str=`date "+%Y_%m_%d_%H_%M_%S"`
 
@@ -53,6 +53,8 @@ replace_option xfstests.py.data/xfstests${SUFFIX}.yaml SCRATCH_MNT_DEFAULT ${XFS
 replace_option xfstests.py.data/xfstests${SUFFIX}.yaml TEST_MNT_DEFAULT ${XFSTESTS_TEST_MNT}
 replace_option xfstests.py.data/xfstests${SUFFIX}.yaml TEST_DEV_DEFAULT /dev/cbd0
 replace_option xfstests.py.data/xfstests${SUFFIX}.yaml SCRATCH_DEV_DEFAULT /dev/cbd1
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml CACHE_TEST_DEFAULT /dev/cbd2
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml CACHE_SCRATCH_DEFAULT /dev/cbd3
 
 
 replace_option fio.py.data/fio${SUFFIX}.yaml CBD_DEV_PATH /dev/cbd0
@@ -72,6 +74,8 @@ fi
 replace_option fio.py.data/fio${SUFFIX}.yaml "output.cvs" OUTPUT_FILE
 replace_option fio.py.data/fio${SUFFIX}.yaml /dev/cbd0 CBD_DEV_PATH
 
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml /dev/cbd3 CACHE_SCRATCH_DEFAULT
+replace_option xfstests.py.data/xfstests${SUFFIX}.yaml /dev/cbd2 CACHE_TEST_DEFAULT
 replace_option xfstests.py.data/xfstests${SUFFIX}.yaml /dev/cbd1 SCRATCH_DEV_DEFAULT
 replace_option xfstests.py.data/xfstests${SUFFIX}.yaml /dev/cbd0 TEST_DEV_DEFAULT
 replace_option xfstests.py.data/xfstests${SUFFIX}.yaml ${XFSTESTS_TEST_MNT} TEST_MNT_DEFAULT
