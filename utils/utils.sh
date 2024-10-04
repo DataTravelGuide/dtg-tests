@@ -12,8 +12,8 @@ setup ()
 	echo "op=dev-start,backend_id=0,queues=1" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=dev-start,backend_id=1,queues=32" > /sys/bus/cbd/devices/transport0/adm
 
-	echo "op=backend-start,path=/dev/vde,cache_size=4096" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=backend-start,path=/dev/vdf,cache_size=4096" > /sys/bus/cbd/devices/transport0/adm
+	echo "op=backend-start,path=/dev/vde,cache_size=160" > /sys/bus/cbd/devices/transport0/adm
+	echo "op=backend-start,path=/dev/vdf,cache_size=5120" > /sys/bus/cbd/devices/transport0/adm
 
 	echo "op=dev-start,backend_id=2,queues=1" > /sys/bus/cbd/devices/transport0/adm
 	echo "op=dev-start,backend_id=3,queues=32" > /sys/bus/cbd/devices/transport0/adm
