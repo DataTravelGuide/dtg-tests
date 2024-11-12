@@ -5,18 +5,18 @@ setup ()
 	# prepare ramdisk for testing.
 	modprobe cbd
 
-	echo "path=/dev/pmem0,hostname=node1,force=1,format=1" >  /sys/bus/cbd/transport_register
-	echo "op=backend-start,path=/dev/vdc" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=backend-start,path=/dev/vdd" > /sys/bus/cbd/devices/transport0/adm
+	cbdctrl tp-reg --path /dev/pmem0 --host node1 --force --format
+	cbdctrl backend-start --path /dev/vdc --handlers 1
+	cbdctrl backend-start --path /dev/vdd --handlers 32
 
-	echo "op=dev-start,backend_id=0,queues=1" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=dev-start,backend_id=1,queues=32" > /sys/bus/cbd/devices/transport0/adm
+	cbdctrl dev-start --backend 0
+	cbdctrl dev-start --backend 1
 
-	echo "op=backend-start,path=/dev/vde,cache_size=160" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=backend-start,path=/dev/vdf,cache_size=5120" > /sys/bus/cbd/devices/transport0/adm
+	cbdctrl backend-start --path /dev/vde --handlers 1 --cache-size 160M
+	cbdctrl backend-start --path /dev/vdf --handlers 32 --cache-size 5120M
 
-	echo "op=dev-start,backend_id=2,queues=1" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=dev-start,backend_id=3,queues=32" > /sys/bus/cbd/devices/transport0/adm
+	cbdctrl dev-start --backend 2
+	cbdctrl dev-start --backend 3
 
 	mkfs.xfs -f /dev/cbd0
 	mkfs.xfs -f /dev/cbd2
@@ -33,17 +33,16 @@ cleanup ()
 		umount $XFSTESTS_TEST_MNT
 	fi
 
-	echo "op=dev-stop,dev_id=0" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=dev-stop,dev_id=1" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=dev-stop,dev_id=2" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=dev-stop,dev_id=3" > /sys/bus/cbd/devices/transport0/adm
-	sleep 3
-	echo "op=backend-stop,backend_id=0" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=backend-stop,backend_id=1" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=backend-stop,backend_id=2" > /sys/bus/cbd/devices/transport0/adm
-	echo "op=backend-stop,backend_id=3" > /sys/bus/cbd/devices/transport0/adm
+	cbdctrl dev-stop --dev 0
+	cbdctrl dev-stop --dev 1
+	cbdctrl dev-stop --dev 2
+	cbdctrl dev-stop --dev 3
+	cbdctrl backend-stop --backend 0
+	cbdctrl backend-stop --backend 1
+	cbdctrl backend-stop --backend 2
+	cbdctrl backend-stop --backend 3
 
-	echo "transport_id=0" > /sys/bus/cbd/transport_unregister 
+	cbdctrl tp-unreg --transport 0
 
 	rmmod cbd
 }
