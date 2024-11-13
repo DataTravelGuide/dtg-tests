@@ -6,7 +6,7 @@ host_mode: !mux
     backend_node: "qemu-1"
   multi_host:
     backend_node: "qemu-2"
-cache_for_xfstests:
+cache_for_xfstests: !mux
   cache:
     cache_for_xfstests: "true"
   no_cache:
