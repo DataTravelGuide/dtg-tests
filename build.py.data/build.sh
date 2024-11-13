@@ -16,4 +16,4 @@ done
 
 cat .config|grep CBD_
 
-make -j 42 M=drivers/block/cbd/
+make prepare; make -j 42 M=drivers/block/cbd/
