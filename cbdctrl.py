@@ -44,6 +44,7 @@ class BuildTest(Test):
         else:
             print("Build failed with error:")
             print(result.stderr)  # Print standard error
+            self.fail(result)
 
     def test(self):
         """

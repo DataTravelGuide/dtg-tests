@@ -11,3 +11,29 @@ cache_for_xfstests: !mux
     cache_for_xfstests: "true"
   no_cache:
     cache_for_xfstests: "false"
+
+kernel_dir: "/workspace/linux_compile/"
+config_list: "CBD_CHANNEL_CRC CBD_CHANNEL_DATA_CRC CBD_CACHE_DATA_CRC CBD_MULTIHOST"
+channel_crc: !mux
+  enable:
+    CBD_CHANNEL_CRC: "true"
+  disable:
+    CBD_CHANNEL_CRC: "false"
+
+channel_data_crc: !mux
+  enable:
+    CBD_CHANNEL_DATA_CRC: "true"
+  disable:
+    CBD_CHANNEL_DATA_CRC: "false"
+
+cache_data_crc: !mux
+  enable:
+    CBD_CACHE_DATA_CRC: "true"
+  disable:
+    CBD_CACHE_DATA_CRC: "false"
+
+multihost: !mux
+  enable:
+    CBD_MULTIHOST: "true"
+  disable:
+    CBD_MULTIHOST: "false"
