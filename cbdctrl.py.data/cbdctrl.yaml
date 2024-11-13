@@ -1,0 +1,13 @@
+blkdev_node: "qemu-1"
+backend_blk: "/dev/sda"
+backend_blk_2: "/dev/sdb"
+host_mode: !mux
+  single_host:
+    backend_node: "qemu-1"
+  multi_host:
+    backend_node: "qemu-2"
+cache_for_xfstests:
+  cache:
+    cache_for_xfstests: "true"
+  no_cache:
+    cache_for_xfstests: "false"
