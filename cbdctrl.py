@@ -6,7 +6,7 @@ from avocado import Test
 from avocado.utils import process
 
 
-class BuildTest(Test):
+class CbdctrlTest(Test):
 
     def setUp(self):
         """
@@ -23,7 +23,7 @@ class BuildTest(Test):
         """
         Execute the cbdctrl.sh script with environment variables set from env_dict
         """
-        # Build the environment variable string
+        # Cbdctrl the environment variable string
         env_vars = ' '.join([f'{key}="{value}"' for key, value in self.env_dict.items()])
 
         # Add environment variables to the cbdctrl command
@@ -39,10 +39,10 @@ class BuildTest(Test):
 
         # Output the result of the command execution
         if result.returncode == 0:
-            print("Build completed successfully:")
+            print("Cbdctrl completed successfully:")
             print(result.stdout)  # Print standard output
         else:
-            print("Build failed with error:")
+            print("Cbdctrl failed with error:")
             print(result.stderr)  # Print standard error
             self.fail(result)
 
@@ -56,4 +56,4 @@ class BuildTest(Test):
         """
         Tear down and log completion of the cbdctrl test
         """
-        self.log.info("Build test finished.")
+        self.log.info("Cbdctrl test finished.")

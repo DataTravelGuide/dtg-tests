@@ -370,7 +370,12 @@ cbdctrl_tp_reg $blkdev_node "node1" "" "true" "true" "true"
 
 cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "false" "false" "false"
 if $multihost_mode; then
-	cbdctrl_tp_reg $backend_node "node2" "/dev/pmem0" "false" "false" "false"
+	if [[ ${CBD_MULTIHOST} == "true" ]]; then
+		cbdctrl_tp_reg $backend_node "node2" "/dev/pmem0" "false" "false" "false"
+	else
+		cbdctrl_tp_reg $backend_node "node2" "/dev/pmem0" "false" "false" "true"
+		exit 0
+	fi
 fi
 
 # cbdctrl backend-start and cbdctrl backend-stop testing
