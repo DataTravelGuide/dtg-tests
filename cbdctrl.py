@@ -43,6 +43,7 @@ class CbdctrlTest(Test):
             print(result.stdout)  # Print standard output
         else:
             print("Cbdctrl failed with error:")
+            print(result.stdout)  # Print standard error
             print(result.stderr)  # Print standard error
             self.fail(result)
 

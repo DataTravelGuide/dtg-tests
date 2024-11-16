@@ -445,7 +445,7 @@ if $multihost_mode; then
 	kill_qemu_pid=$!
 fi
 
-run_remote_cmd $blkdev_node "cd /root/xfstests/;./check generic/001"
+run_remote_cmd $blkdev_node "cd /root/xfstests/;./check -g generic/rw"
 if [[ $? != 0 ]]; then
 	exit 1
 fi
