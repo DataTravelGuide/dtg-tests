@@ -38,33 +38,60 @@ run_remote_cmd() {
 
 # Register a transport on the specified backend node
 cbdctrl_tp_reg() {
-	local node="$1"
-	local host="$2"
-	local path="$3"
-	local format="$4"
-	local force="$5"
-	local expect_fail="$6"
+    local node="$1"       # Remote node where the command will be executed
+    local host="$2"       # Hostname for the transport
+    local path="$3"       # Backend path to be used
+    local format="$4"     # Whether to format the transport (true/false)
+    local force="$5"      # Whether to force the operation (true/false)
+    local expect_fail="$6" # Whether failure is expected ("true", "false", or "ignore")
 
-	cmd="cbdctrl tp-reg"
-	[[ -n "$host" ]] && cmd+=" --host $host"
-	[[ -n "$path" ]] && cmd+=" -p $path"
-	[[ "$format" == "true" ]] && cmd+=" --format"
-	[[ "$force" == "true" ]] && cmd+=" --force"
+    # Construct the cbdctrl tp-reg command
+    cmd="cbdctrl tp-reg"
+    [[ -n "$host" ]] && cmd+=" --host $host"
+    [[ -n "$path" ]] && cmd+=" -p $path"
+    [[ "$format" == "true" ]] && cmd+=" --format"
+    [[ "$force" == "true" ]] && cmd+=" --force"
 
-	run_remote_cmd "$node" "$cmd" 
-	local result=$?
+    # Execute the registration command on the remote node
+    run_remote_cmd "$node" "$cmd"
+    local result=$?
 
-	if [[ "$expect_fail" == "ignore" ]]; then
-		return
-	fi
+    # If failure is to be ignored, return immediately
+    if [[ "$expect_fail" == "ignore" ]]; then
+        return
+    fi
 
-	if [[ "$expect_fail" == "true" && $result -eq 0 ]]; then
-		echo "Error: Command succeeded unexpectedly."
-		exit 1
-	elif [[ "$expect_fail" != "true" && $result -ne 0 ]]; then
-		echo "Error: Command failed unexpectedly with return code $result."
-		exit 1
-	fi
+    # Validate command result against expectations
+    if [[ "$expect_fail" == "true" && $result -eq 0 ]]; then
+        echo "Error: Command succeeded unexpectedly."
+        exit 1
+    elif [[ "$expect_fail" != "true" && $result -ne 0 ]]; then
+        echo "Error: Command failed unexpectedly with return code $result."
+        exit 1
+    fi
+
+    # Skip further checks if failure is expected
+    if [[ "$expect_fail" == "true" ]]; then
+        return
+    fi
+
+    # Fetch the transport list to verify the registration
+    local tp_list_output
+    tp_list_output=$(run_remote_cmd "$node" "cbdctrl tp-list")
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Failed to fetch tp-list from $node."
+        exit 1
+    fi
+
+    # Parse JSON output to validate the path
+    local actual_path
+    actual_path=$(echo "$tp_list_output" | jq -r '.[] | select(.path == "'"$path"'") | .path')
+    if [[ "$actual_path" != "$path" ]]; then
+        echo "Error: Path in tp-list ($actual_path) does not match expected path ($path)."
+        exit 1
+    fi
+
+    echo "Transport registered successfully with expected path: $path"
 }
 
 # Unregister a transport on the specified backend node
