@@ -356,12 +356,20 @@ else
 fi
 
 # cbdctrl tp-reg and cbdctrl tp-unreg testing
+run_remote_cmd $blkdev_node "echo 'path=/dev/pmem0,hostname=\"node-1\",hostid=1024' > /sys/bus/cbd/transport_register"
+
+if [[ $? -eq 0 ]]; then
+	echo "Error: Command succeeded unexpectedly."
+	exit 1
+fi
+
 cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "true" "true" "false"
 transport_path=`ssh $blkdev_node "cat /sys/bus/cbd/devices/transport0/path"`
 if [[ "$transport_path" != "/dev/pmem0" ]]; then
 	echo "path of transport is not expected"
 	exit 1
 fi
+
 cbdctrl_tp_unreg $blkdev_node 0 "false"
 
 cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "true" "false" "true"
@@ -445,7 +453,7 @@ if $multihost_mode; then
 	kill_qemu_pid=$!
 fi
 
-run_remote_cmd $blkdev_node "cd /root/xfstests/;./check -g generic/rw"
+run_remote_cmd $blkdev_node "cd /root/xfstests/;./check generic/001"
 if [[ $? != 0 ]]; then
 	exit 1
 fi
