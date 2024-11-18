@@ -296,41 +296,45 @@ function wait_qemu_2_stopped() {
 }
 
 check_ssh() {
-	host=$1  # ${blkdev_node} 的主机名或IP
-	port=${2:-22}  # SSH端口，默认为22
-	user=${3:-root}  # SSH登录用户名，默认为root
-	max_attempts=${4:-30}  # 最大重试次数，默认30次
-	wait_time=${5:-5}  # 每次尝试之间等待时间，默认5秒
+	local host=$1  # Hostname or IP of the target machine (e.g., blkdev_node)
+	local port=${2:-22}  # SSH port, defaults to 22
+	local user=${3:-root}  # SSH username, defaults to root
 
-	timeout -s 9 20 ssh -o ControlMaster=no -p "$port" "$user@$host" 'exit' 2>/dev/null
+	# Attempt to connect to the host using SSH with a timeout of 20 seconds.
+	# -o BatchMode=yes: Ensures non-interactive mode (no password prompts).
+	# -o ConnectTimeout=5: Sets a timeout for the SSH connection attempt.
+	timeout 20s ssh -o BatchMode=yes -o ConnectTimeout=5 -p "$port" "$user@$host" 'exit' 2>/dev/null
+	return $?  # Return the exit status of the SSH command
 }
 
 wait_for_qemu_ssh() {
-    local host=$1  # ${backend_node} 的主机名或IP
-    local port=${2:-22}  # SSH端口，默认为22
-    local user=${3:-root}  # SSH登录用户名，默认为root
-    local max_attempts=${4:-30}  # 最大重试次数，默认30次
-    local wait_time=${5:-5}  # 每次尝试之间等待时间，默认5秒
+	local host=$1  # Hostname or IP of the target machine (e.g., backend_node)
+	local port=${2:-22}  # SSH port, defaults to 22
+	local user=${3:-root}  # SSH username, defaults to root
+	local max_attempts=${4:-30}  # Maximum number of retry attempts, defaults to 30
+	local wait_time=${5:-5}  # Time to wait between retries, defaults to 5 seconds
 
-    echo "Waiting for ${backend_node} to become available via SSH..."
+	echo "Waiting for $host to become available via SSH..."
 
-    attempt=0
-    while (( attempt < max_attempts )); do
-        # 尝试使用SSH无密码连接到${backend_node}，返回状态码
-	check_ssh $@
-        ssh_status=$?
+	local attempt=0
+	while (( attempt < max_attempts )); do
+		# Call check_ssh to verify if SSH is accessible
+		check_ssh "$host" "$port" "$user"
+		local ssh_status=$?
 
-        if [ $ssh_status -eq 0 ]; then
-            echo "${backend_node} is up and SSH is available!"
-            return 0
-        else
-            echo "Attempt $((++attempt))/$max_attempts failed (exit code $ssh_status), retrying in $wait_time seconds..."
-            sleep "$wait_time"
-        fi
-    done
+		if [ $ssh_status -eq 0 ]; then
+			echo "$host is up and SSH is available!"
+			return 0  # SSH is accessible
+		else
+			# Increment the attempt counter and wait before retrying
+			echo "Attempt $((++attempt))/$max_attempts failed (exit code $ssh_status), retrying in $wait_time seconds..."
+			sleep "$wait_time"
+		fi
+	done
 
-    echo "${backend_node} is not reachable after $max_attempts attempts."
-    return 1
+	# If all attempts fail, print an error message and return a failure status
+	echo "$host is not reachable after $max_attempts attempts."
+	return 1
 }
 
 function monitor_qemu() {
