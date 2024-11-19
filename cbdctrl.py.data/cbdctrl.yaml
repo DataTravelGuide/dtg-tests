@@ -37,3 +37,13 @@ multihost: !mux
     CBD_MULTIHOST: "true"
   disable:
     CBD_MULTIHOST: "false"
+
+test_script: !mux
+  register:
+    test_script: "./cbdctrl.py.data/cbdctrl_reg.sh"
+  backend:
+    test_script: "./cbdctrl.py.data/cbdctrl_backend.sh"
+  dev:
+    test_script: "./cbdctrl.py.data/cbdctrl_dev.sh"
+  xfstests:
+    test_script: "./cbdctrl.py.data/cbdctrl_xfstests.sh"

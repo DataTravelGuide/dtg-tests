@@ -27,7 +27,7 @@ class CbdctrlTest(Test):
         env_vars = ' '.join([f'{key}="{value}"' for key, value in self.env_dict.items()])
 
         # Add environment variables to the cbdctrl command
-        cbdctrl_command = f"pwd;{env_vars} ./cbdctrl.py.data/cbdctrl.sh"
+        cbdctrl_command = f"pwd;{env_vars} {self.params.get('test_script')}"
 
         # Execute the command and capture the output
         result = subprocess.run(
