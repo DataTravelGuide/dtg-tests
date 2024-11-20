@@ -1,20 +1,5 @@
 #!/bin/bash
 
-# Cleanup function to run on script exit
-cleanup() {
-	echo "Running cleanup..."
-	ssh "$blkdev_node" cbdctrl dev-stop --dev 0
-	ssh "$blkdev_node" cbdctrl dev-stop --dev 1
-	ssh "$backend_node" cbdctrl dev-stop --dev 0
-	ssh "$backend_node" cbdctrl dev-stop --dev 1
-	ssh "$backend_node" cbdctrl backend-stop --backend 0
-	ssh "$backend_node" cbdctrl backend-stop --backend 1
-	ssh "$backend_node" cbdctrl tp-unreg --transport 0
-	if [[ "$blkdev_node" != "$backend_node" ]]; then
-		ssh "$blkdev_node" cbdctrl tp-unreg --transport 0
-	fi
-}
-
 run_remote_cmd() {
     local node="$1"
     local cmd="$2"
@@ -31,6 +16,22 @@ run_remote_cmd() {
         echo "Error: Command failed with status $status"
         return $status
     fi
+}
+
+# Cleanup function to run on script exit
+cleanup() {
+	echo "Running cleanup..."
+	run_remote_cmd $blkdev_node "umount /media"
+	ssh "$blkdev_node" cbdctrl dev-stop --dev 0
+	ssh "$blkdev_node" cbdctrl dev-stop --dev 1
+	ssh "$backend_node" cbdctrl dev-stop --dev 0
+	ssh "$backend_node" cbdctrl dev-stop --dev 1
+	ssh "$backend_node" cbdctrl backend-stop --backend 0 --force
+	ssh "$backend_node" cbdctrl backend-stop --backend 1 --force
+	ssh "$backend_node" cbdctrl tp-unreg --transport 0
+	if [[ "$blkdev_node" != "$backend_node" ]]; then
+		ssh "$blkdev_node" cbdctrl tp-unreg --transport 0
+	fi
 }
 
 # Register a transport on the specified backend node
@@ -198,7 +199,8 @@ cbdctrl_dev_start() {
 	[[ -n "$transport_id" ]] && cmd+=" --transport $transport_id"
 	[[ -n "$backend_id" ]] && cmd+=" --backend $backend_id"
 
-	run_remote_cmd "$node" "$cmd" 
+	local output
+	output=$(run_remote_cmd "$node" "$cmd")
 	local result=$?
 
 	if [[ "$expect_fail" == "ignore" ]]; then
@@ -211,6 +213,14 @@ cbdctrl_dev_start() {
 	elif [[ "$expect_fail" != "true" && $result -ne 0 ]]; then
 		echo "Error: Command failed unexpectedly with return code $result."
 		exit 1
+	fi
+
+	# Validate output format if expect_fail is not true
+	if [[ "$expect_fail" != "true" ]]; then
+		if [[ ! "$output" =~ ^/dev/cbd[0-9]+$ ]]; then
+			echo "Error: Unexpected output format. Expected /dev/cbdX, but got: $output"
+			exit 1
+		fi
 	fi
 }
 
@@ -252,12 +262,16 @@ cbdctrl_dev_stop() {
 	exit 1
 }
 
-function kill_qemu_2() {
-        ps -ef | grep qemu-system | grep jammy-server-cloudimg-amd64_2.raw | gawk '{print "kill -9 "$2}' | bash
+function kill_backend_node() {
+        ps -ef | grep qemu-system | grep ${backend_node} | gawk '{print "kill -9 "$2}' | bash
+}
+
+function kill_blkdev_node() {
+        ps -ef | grep qemu-system | grep ${blkdev_node} | gawk '{print "kill -9 "$2}' | bash
 }
 
 # Function that will execute the command in a loop
-function kill_qemu_2_loop() {
+function kill_backend_node_loop() {
     while true ; do
         # Wait for a random interval between 100 and 300 seconds
         #sleep_time=$((100 + RANDOM % 201))
@@ -266,7 +280,7 @@ function kill_qemu_2_loop() {
         sleep $sleep_time
 
         # Execute the command
-	kill_qemu_2
+	kill_backend_node
         echo "Command executed once"
     done
     echo "Background loop stopped"
@@ -274,7 +288,7 @@ function kill_qemu_2_loop() {
 
 
 # Function to wait until ${backend_node} has stopped
-function wait_qemu_2_stopped() {
+function wait_backend_node_stopped() {
     local qemu_ip="${backend_node}"    # Replace with the IP address of ${backend_node}
     local interval=5           # Time in seconds between each check
     local fail_count=0         # Counter for consecutive ping failures
@@ -348,7 +362,7 @@ wait_for_qemu_ssh() {
 function monitor_qemu() {
     while true; do
         # Wait for ${backend_node} to stop
-        wait_qemu_2_stopped
+        wait_backend_node_stopped
 
         # After ${backend_node} stopped, wait for SSH to become available
         wait_for_qemu_ssh "${backend_node}" 22 "root" 100 5

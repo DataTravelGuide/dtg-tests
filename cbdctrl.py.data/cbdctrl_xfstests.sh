@@ -33,7 +33,7 @@ if $multihost_mode; then
 	monitor_pid=$!
 
 	# Start the function in the background
-	kill_qemu_2_loop &
+	kill_backend_node_loop &
 	# Save the process ID of the background task so we can stop it later
 	kill_qemu_pid=$!
 fi

@@ -27,7 +27,7 @@ cbdctrl_backend_start $backend_node 0 $backend_blk "" "" false
 cbdctrl_backend_start $backend_node 0 $backend_blk "" "" true # device busy
 
 if $multihost_mode; then
-	kill_qemu_2
+	kill_backend_node
 	wait_for_qemu_ssh "${backend_node}" 22 "root" 100 5
 	ssh ${backend_node} "rmmod cbd; insmod /workspace/linux_compile/drivers/block/cbd/cbd.ko"
 	cbdctrl_tp_reg $backend_node "node2" "/dev/pmem0" "false" "false" "false"
