@@ -6,7 +6,7 @@ source ./cbdctrl.py.data/cbdctrl_utils.sh
 
 prepare
 
-cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "false" "false" "false"
+cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "true" "true" "false"
 if $multihost_mode; then
 	if [[ ${CBD_MULTIHOST} == "true" ]]; then
 		cbdctrl_tp_reg $backend_node "node2" "/dev/pmem0" "false" "false" "false"

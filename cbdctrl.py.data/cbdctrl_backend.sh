@@ -6,7 +6,7 @@ source ./cbdctrl.py.data/cbdctrl_utils.sh
 
 prepare
 
-cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "false" "false" "false"
+cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "true" "true" "false"
 if $multihost_mode; then
 	if [[ ${CBD_MULTIHOST} == "true" ]]; then
 		cbdctrl_tp_reg $backend_node "node2" "/dev/pmem0" "false" "false" "false"
@@ -18,6 +18,10 @@ fi
 
 # cbdctrl backend-start and cbdctrl backend-stop testing
 cbdctrl_backend_start $backend_node 0 $backend_blk "" "" true "0"
+
+cbdctrl_backend_start $backend_node 0 $backend_blk "" "" false "" true
+cbdctrl_dev_stop $backend_node 0 0 false
+cbdctrl_backend_stop $backend_node 0 0 false
 
 cbdctrl_backend_start $backend_node 0 $backend_blk "" "" false
 cbdctrl_backend_start $backend_node 0 $backend_blk "" "" true # device busy
@@ -36,7 +40,6 @@ if $multihost_mode; then
 	fi
 	cbdctrl_backend_start $backend_node 0 $backend_blk "" "" false
 fi
-
 
 cbdctrl_dev_start $blkdev_node 0 0 "false"
 cbdctrl_dev_start $blkdev_node 0 0 "true" # backend busy

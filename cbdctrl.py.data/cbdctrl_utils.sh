@@ -5,6 +5,8 @@ cleanup() {
 	echo "Running cleanup..."
 	ssh "$blkdev_node" cbdctrl dev-stop --dev 0
 	ssh "$blkdev_node" cbdctrl dev-stop --dev 1
+	ssh "$backend_node" cbdctrl dev-stop --dev 0
+	ssh "$backend_node" cbdctrl dev-stop --dev 1
 	ssh "$backend_node" cbdctrl backend-stop --backend 0
 	ssh "$backend_node" cbdctrl backend-stop --backend 1
 	ssh "$backend_node" cbdctrl tp-unreg --transport 0
@@ -123,6 +125,7 @@ cbdctrl_backend_start() {
 	local handlers="$5"
 	local expect_fail="$6"
 	local backend_id="$7"
+	local start_dev="$8"
 
 	cmd="cbdctrl backend-start"
 	[[ -n "$transport_id" ]] && cmd+=" --transport $transport_id"
@@ -130,8 +133,10 @@ cbdctrl_backend_start() {
 	[[ -n "$cache_size" ]] && cmd+=" --cache-size $cache_size"
 	[[ -n "$handlers" ]] && cmd+=" --handlers $handlers"
 	[[ -n "$backend_id" ]] && cmd+=" --backend $backend_id"
+	[[ -n "$start_dev" ]] && cmd+=" --start-dev"
 
-	run_remote_cmd "$node" "$cmd" 
+	local startoutput
+	start_output=$(run_remote_cmd "$node" "$cmd")
 	local result=$?
 
 	if [[ "$expect_fail" == "ignore" ]]; then
@@ -144,6 +149,14 @@ cbdctrl_backend_start() {
 	elif [[ "$expect_fail" != "true" && $result -ne 0 ]]; then
 		echo "Error: Command failed unexpectedly with return code $result."
 		exit 1
+	fi
+
+	# Validate output format if start_dev is set and expect_fail is false
+	if [[ -n "$start_dev" && "$expect_fail" != "true" ]]; then
+		if [[ ! "$start_output" =~ ^/dev/cbd[0-9]+$ ]]; then
+			echo "Error: Unexpected output format. Expected /dev/cbdX, but got: $start_output"
+			exit 1
+		fi
 	fi
 }
 

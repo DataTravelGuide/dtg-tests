@@ -8,7 +8,6 @@ prepare
 
 # cbdctrl tp-reg and cbdctrl tp-unreg testing
 run_remote_cmd $blkdev_node "echo 'path=/dev/pmem0,hostname=\"node-1\",hostid=1024' > /sys/bus/cbd/transport_register"
-
 if [[ $? -eq 0 ]]; then
 	echo "Error: Command succeeded unexpectedly."
 	exit 1
@@ -20,13 +19,18 @@ if [[ "$transport_path" != "/dev/pmem0" ]]; then
 	echo "path of transport is not expected"
 	exit 1
 fi
-
 cbdctrl_tp_unreg $blkdev_node 0 "false"
 
+# re-format without --force, expect fail
 cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "true" "false" "true"
+
+# no hostname, expect fail
 cbdctrl_tp_reg $blkdev_node "" "/dev/pmem0" "true" "true" "true"
+
+# no path, expect fail
 cbdctrl_tp_reg $blkdev_node "node1" "" "true" "true" "true"
 
+# reg formatted transport, expect success
 cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "false" "false" "false"
 if $multihost_mode; then
 	if [[ ${CBD_MULTIHOST} == "true" ]]; then
