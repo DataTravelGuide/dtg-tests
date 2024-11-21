@@ -28,32 +28,9 @@ cbdctrl_dev_start $blkdev_node 0 0 false
 cbdctrl_dev_start $blkdev_node 0 1 false
 run_remote_cmd $blkdev_node "mkfs.xfs -f /dev/cbd0"
 
-if $multihost_mode; then
-	monitor_qemu &
-	monitor_pid=$!
-
-	# Start the function in the background
-	kill_backend_node_loop &
-	# Save the process ID of the background task so we can stop it later
-	kill_qemu_pid=$!
-fi
-
-run_remote_cmd $blkdev_node "cd /root/xfstests/;./check generic/031"
+run_remote_cmd $blkdev_node "cd /root/xfstests/;time ./check -g rw -g quick -E exclude.exclude"
 if [[ $? != 0 ]]; then
 	exit 1
-fi
-
-if $multihost_mode; then
-	kill $kill_qemu_pid
-	wait $kill_qemu_pid
-
-	kill $monitor_pid
-	wait $monitor_pid
-
-	wait_for_qemu_ssh "${backend_node}" 22 "root" 100 5
-	cbdctrl_tp_reg $backend_node "node2" "/dev/pmem0" "false" "false" "ignore"
-	cbdctrl_backend_start $backend_node 0 $backend_blk "" 1 ignore
-	cbdctrl_backend_start $backend_node 0 $backend_blk_2 "" 1 ignore
 fi
 
 cbdctrl_dev_stop $blkdev_node 0 0 false

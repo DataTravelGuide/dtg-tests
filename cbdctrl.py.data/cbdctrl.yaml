@@ -47,3 +47,8 @@ test_script: !mux
     test_script: "./cbdctrl.py.data/cbdctrl_dev.sh"
   xfstests:
     test_script: "./cbdctrl.py.data/cbdctrl_xfstests.sh"
+  all_xfstests:
+    !filter-only : /run/cache_data_crc/disable
+    !filter-only : /run/channel_data_crc/disable
+    !filter-only : /run/channel_crc/disable
+    test_script: "./cbdctrl.py.data/cbdctrl_all_xfstests.sh"
