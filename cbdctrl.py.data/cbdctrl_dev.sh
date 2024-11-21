@@ -43,14 +43,14 @@ if $multihost_mode; then
 	expected_md5=$(run_remote_cmd ${blkdev_node} "md5sum /root/100M" | awk '{print $1}')
 	real_md5=$(run_remote_cmd ${blkdev_node} "md5sum /media/100M" | awk '{print $1}')
 
-	run_remote_cmd $blkdev_node "umount /media"
-
 	# Compare only the MD5 values
 	if [[ "$expected_md5" != "$real_md5" ]]; then
 			echo "Error: expected_md5: $expected_md5, real_md5: $real_md5"
 				exit 1
 	fi
 fi
+
+run_remote_cmd $blkdev_node "umount /media"
 
 cbdctrl_dev_stop $blkdev_node 0 0 false
 cbdctrl_dev_stop $blkdev_node 0 1 false
