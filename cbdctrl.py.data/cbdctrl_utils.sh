@@ -273,15 +273,14 @@ function kill_blkdev_node() {
 # Function that will execute the command in a loop
 function kill_backend_node_loop() {
     while true ; do
-        # Wait for a random interval between 100 and 300 seconds
-        #sleep_time=$((100 + RANDOM % 201))
-	sleep_time=100
-        echo "Waiting $sleep_time seconds before executing command..."
-        sleep $sleep_time
-
         # Execute the command
 	kill_backend_node
         echo "Command executed once"
+
+        # Wait for a random interval between 100 and 300 seconds
+        sleep_time=$((100 + RANDOM % 201))
+        echo "Waiting $sleep_time seconds before executing command..."
+        sleep $sleep_time
     done
     echo "Background loop stopped"
 }
@@ -405,6 +404,9 @@ function prepare() {
 
 	ssh ${blkdev_node} "rmmod cbd; insmod /workspace/linux_compile/drivers/block/cbd/cbd.ko"
 	ssh ${backend_node} "rmmod cbd; insmod /workspace/linux_compile/drivers/block/cbd/cbd.ko"
+
+	run_remote_cmd ${blkdev_node} "cd /workspace/cbd-utils; make; make install"
+	run_remote_cmd ${backend_node} "cd /workspace/cbd-utils; make; make install"
 
 	if [[ "$backend_node" == "$blkdev_node" ]]; then
 	    multihost_mode=false

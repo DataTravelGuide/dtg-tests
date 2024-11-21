@@ -29,6 +29,7 @@ cbdctrl_dev_start $blkdev_node 0 1 false
 run_remote_cmd $blkdev_node "mkfs.xfs -f /dev/cbd0"
 
 if $multihost_mode; then
+	echo "multihost_mode kill backend node\n"
 	monitor_qemu &
 	monitor_pid=$!
 
