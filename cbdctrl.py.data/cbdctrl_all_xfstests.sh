@@ -28,7 +28,7 @@ cbdctrl_dev_start $blkdev_node 0 0 false
 cbdctrl_dev_start $blkdev_node 0 1 false
 run_remote_cmd $blkdev_node "mkfs.xfs -f /dev/cbd0"
 
-run_remote_cmd $blkdev_node "cd /root/xfstests/;time ./check -g rw -g quick -E exclude.exclude"
+run_remote_cmd $blkdev_node "cd /root/xfstests/;time ./check -g generic/rw -E exclude.exclude"
 
 cbdctrl_dev_stop $blkdev_node 0 0 false
 cbdctrl_dev_stop $blkdev_node 0 1 false
