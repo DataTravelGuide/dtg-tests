@@ -20,6 +20,12 @@ run_remote_cmd() {
 
 # Cleanup function to run on script exit
 cleanup() {
+	run_remote_cmd $blkdev_node "echo '==== end ${AVOCADO_TEST_LOGDIR} ==== ' > /dev/kmsg"
+	run_remote_cmd $blkdev_node "dmesg" > $AVOCADO_TEST_OUTPUTDIR/${blkdev_node}_dmesg
+	if [[ "$blkdev_node" != "$backend_node" ]]; then
+		run_remote_cmd $backend_node "echo '==== end ${AVOCADO_TEST_LOGDIR} ==== ' > /dev/kmsg"
+		run_remote_cmd $backend_node "dmesg" > $AVOCADO_TEST_OUTPUTDIR/${backend_node}_dmesg
+	fi
 	echo "Running cleanup..."
 	run_remote_cmd $blkdev_node "umount /media"
 	ssh "$blkdev_node" cbdctrl dev-stop --dev 0
@@ -322,9 +328,8 @@ check_ssh() {
 	local user=${3:-root}  # SSH username, defaults to root
 
 	# Attempt to connect to the host using SSH with a timeout of 20 seconds.
-	# -o BatchMode=yes: Ensures non-interactive mode (no password prompts).
 	# -o ConnectTimeout=5: Sets a timeout for the SSH connection attempt.
-	timeout 20s ssh -o BatchMode=yes -o ConnectTimeout=5 -p "$port" "$user@$host" 'exit' 2>/dev/null
+	timeout 20s ssh  -vvv -o ConnectTimeout=5 -p "$port" "$user@$host" 'exit' 2>/dev/null
 	return $?  # Return the exit status of the SSH command
 }
 
@@ -381,6 +386,10 @@ function prepare() {
 	trap cleanup EXIT
 
 	env
+	run_remote_cmd $blkdev_node "echo '==== start ${AVOCADO_TEST_LOGDIR} ==== ' > /dev/kmsg"
+	if [[ "$blkdev_node" != "$backend_node" ]]; then
+		run_remote_cmd $backend_node "echo '==== start ${AVOCADO_TEST_LOGDIR} ==== ' > /dev/kmsg"
+	fi
 	cd ${kernel_dir}
 
 	# List of variable names to check
@@ -404,9 +413,6 @@ function prepare() {
 
 	ssh ${blkdev_node} "rmmod cbd; insmod /workspace/linux_compile/drivers/block/cbd/cbd.ko"
 	ssh ${backend_node} "rmmod cbd; insmod /workspace/linux_compile/drivers/block/cbd/cbd.ko"
-
-	run_remote_cmd ${blkdev_node} "cd /workspace/cbd-utils; make; make install"
-	run_remote_cmd ${backend_node} "cd /workspace/cbd-utils; make; make install"
 
 	if [[ "$backend_node" == "$blkdev_node" ]]; then
 	    multihost_mode=false

@@ -49,6 +49,7 @@ cbdctrl_backend_stop $backend_node 0 0 false
 cbdctrl_backend_stop $backend_node 0 0 true # backend stopped
 
 cbdctrl_backend_start $backend_node 0 $backend_blk "200M" 1 false # cache backend
+echo `run_remote_cmd $blkdev_node "cbdctrl dev-list --all"`
 cbdctrl_dev_start $blkdev_node 0 0 "false"
 cbdctrl_dev_stop $blkdev_node 0 0  false
 cbdctrl_backend_stop $backend_node 0 0 false
