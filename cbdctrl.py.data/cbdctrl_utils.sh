@@ -327,9 +327,10 @@ check_ssh() {
 	local port=${2:-22}  # SSH port, defaults to 22
 	local user=${3:-root}  # SSH username, defaults to root
 
-	# Attempt to connect to the host using SSH with a timeout of 20 seconds.
-	# -o ConnectTimeout=5: Sets a timeout for the SSH connection attempt.
-	timeout 20s ssh  -vvv -o ConnectTimeout=5 -p "$port" "$user@$host" 'exit' 2>/dev/null
+	# Use a new shell context for the SSH command
+	timeout 20s bash -c "
+		ssh -vvv -o ConnectTimeout=5 -p \"$port\" \"$user@$host\" 'exit' 2>/dev/null
+	"
 	return $?  # Return the exit status of the SSH command
 }
 
