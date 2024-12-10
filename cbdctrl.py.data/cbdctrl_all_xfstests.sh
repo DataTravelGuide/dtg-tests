@@ -17,8 +17,8 @@ if $multihost_mode; then
 fi
 
 if [[ "${cache_for_xfstests}" == "true" ]]; then
-	cbdctrl_backend_start $backend_node 0 $backend_blk "1G" 1 false
-	cbdctrl_backend_start $backend_node 0 $backend_blk_2 "1G" 1 false
+	cbdctrl_backend_start $backend_node 0 $backend_blk "10G" 1 false
+	cbdctrl_backend_start $backend_node 0 $backend_blk_2 "10G" 1 false
 else
 	cbdctrl_backend_start $backend_node 0 $backend_blk "" 1 false
 	cbdctrl_backend_start $backend_node 0 $backend_blk_2 "" 1 false
