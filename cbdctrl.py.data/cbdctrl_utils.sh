@@ -335,34 +335,45 @@ check_ssh() {
 }
 
 wait_for_qemu_ssh() {
-	local host=$1  # Hostname or IP of the target machine (e.g., backend_node)
-	local port=${2:-22}  # SSH port, defaults to 22
-	local user=${3:-root}  # SSH username, defaults to root
-	local max_attempts=${4:-30}  # Maximum number of retry attempts, defaults to 30
-	local wait_time=${5:-5}  # Time to wait between retries, defaults to 5 seconds
+        local host=$1  # Hostname or IP of the target machine (e.g., backend_node)
+        local port=${2:-22}  # SSH port, defaults to 22
+        local user=${3:-root}  # SSH username, defaults to root
+        local max_attempts=${4:-30}  # Maximum number of retry attempts, defaults to 30
+        local wait_time=${5:-5}  # Time to wait between retries, defaults to 5 seconds
 
-	echo "Waiting for $host to become available via SSH..."
+        echo "Waiting for $host to become available via SSH..."
 
-	local attempt=0
-	while (( attempt < max_attempts )); do
-		# Call check_ssh to verify if SSH is accessible
-		check_ssh "$host" "$port" "$user"
-		local ssh_status=$?
+        local attempt=0
+        local success_count=0  # Tracks consecutive successful checks
+        local required_successes=3  # Number of consecutive successes required
 
-		if [ $ssh_status -eq 0 ]; then
-			echo "$host is up and SSH is available!"
-			return 0  # SSH is accessible
-		else
-			# Increment the attempt counter and wait before retrying
-			echo "Attempt $((++attempt))/$max_attempts failed (exit code $ssh_status), retrying in $wait_time seconds..."
-			sleep "$wait_time"
-		fi
-	done
+        while (( attempt < max_attempts )); do
+                # Call check_ssh to verify if SSH is accessible
+                check_ssh "$host" "$port" "$user"
+                local ssh_status=$?
 
-	# If all attempts fail, print an error message and return a failure status
-	echo "$host is not reachable after $max_attempts attempts."
-	return 1
+                if [ $ssh_status -eq 0 ]; then
+                        ((success_count++))  # Increment success counter
+                        echo "SSH check successful ($success_count/$required_successes)."
+                        # If we reach the required number of successes, return success
+                        if (( success_count >= required_successes )); then
+                                echo "$host is up and SSH is stable!"
+                                return 0
+                        fi
+                else
+                        success_count=0  # Reset success counter on failure
+                        echo "Attempt $((++attempt))/$max_attempts failed (exit code $ssh_status), retrying in $wait_time seconds..."
+                fi
+
+                # Wait before the next attempt
+                sleep "$wait_time"
+        done
+
+        # If all attempts fail, print an error message and return a failure status
+        echo "$host is not reachable after $max_attempts attempts."
+        return 1
 }
+
 
 function monitor_qemu() {
     while true; do
