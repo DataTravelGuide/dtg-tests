@@ -32,7 +32,7 @@ echo "expected: $expected_md5 real: $real_md5 "
 
 if $multihost_mode; then
 	kill_blkdev_node
-        wait_for_qemu_ssh "${blkdev_node}" 22 "root" 100 5
+        wait_for_qemu_ssh "${blkdev_node}" 22 "root" 20 5
 	ssh ${blkdev_node} "rmmod cbd; insmod /workspace/linux_compile/drivers/block/cbd/cbd.ko"
 	cbdctrl_tp_reg $blkdev_node "node1" "/dev/pmem0" "false" "false" "false"
 	cbdctrl_dev_start $blkdev_node 0 0 false

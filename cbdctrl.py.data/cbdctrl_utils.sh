@@ -329,7 +329,7 @@ check_ssh() {
 
 	# Use a new shell context for the SSH command
 	timeout 20s bash -c "
-		ssh -vvv -o ConnectTimeout=5 -p \"$port\" \"$user@$host\" 'exit' 2>/dev/null
+		ssh -vvv -o ConnectTimeout=5 -p \"$port\" \"$user@$host\" 'exit' 2>>/tmp/ssh_log
 	"
 	return $?  # Return the exit status of the SSH command
 }
@@ -342,6 +342,8 @@ wait_for_qemu_ssh() {
         local wait_time=${5:-5}  # Time to wait between retries, defaults to 5 seconds
 
         echo "Waiting for $host to become available via SSH..."
+
+	sleep 60
 
         local attempt=0
         local success_count=0  # Tracks consecutive successful checks
@@ -381,7 +383,7 @@ function monitor_qemu() {
         wait_backend_node_stopped
 
         # After ${backend_node} stopped, wait for SSH to become available
-        wait_for_qemu_ssh "${backend_node}" 22 "root" 100 5
+        wait_for_qemu_ssh "${backend_node}" 22 "root" 20 5
 
         # Perform additional operations (example: sleep for 1 second)
         echo "${backend_node} has restarted."

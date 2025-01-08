@@ -51,7 +51,7 @@ if $multihost_mode; then
 	kill $monitor_pid
 	wait $monitor_pid
 
-	wait_for_qemu_ssh "${backend_node}" 22 "root" 100 5
+	wait_for_qemu_ssh "${backend_node}" 22 "root" 20 5
 	ssh ${backend_node} "rmmod cbd; insmod /workspace/linux_compile/drivers/block/cbd/cbd.ko"
 	cbdctrl_tp_reg $backend_node "node2" "/dev/pmem0" "false" "false" "ignore"
 	cbdctrl_backend_start $backend_node 0 $backend_blk "" 1 ignore
