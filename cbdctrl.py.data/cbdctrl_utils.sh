@@ -418,7 +418,7 @@ function prepare() {
 
 	cat .config|grep CBD_
 
-	make prepare; make -j 42 M=drivers/block/cbd/
+	make prepare; touch drivers/block/cbd/cbd_internal.h; make -j 42 M=drivers/block/cbd/
 	if [[ $? != 0 ]]; then
 		exit 1
 	fi
