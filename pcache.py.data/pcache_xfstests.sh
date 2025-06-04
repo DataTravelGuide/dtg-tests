@@ -24,12 +24,10 @@ trap cleanup EXIT
 # Prepare pcache devices
 bash ./pcache.py.data/pcache.sh
 
-# Mount devices for xfstests
+# Mount points for xfstests
 sudo mkdir -p "${TEST_MNT}" "${SCRATCH_MNT}"
-sudo mount /dev/mapper/pcache_ram0p1 "${TEST_MNT}"
-sudo mount /dev/mapper/pcache_ram0p2 "${SCRATCH_MNT}"
 
 # Run a basic xfstests case
 cd /workspace/xfstests
-./check generic/001
+./check -g quick -g generic/rw -E ./exclude.exclude
 
