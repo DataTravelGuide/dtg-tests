@@ -1,0 +1,17 @@
+linux_path: "/workspace/linux_compile"
+cache_dev0: "/dev/pmem0"
+cache_dev1: "/dev/pmem1"
+
+gc: !mux
+  gc60:
+    gc_percent: "60"
+  gc80:
+    gc_percent: "80"
+
+crc: !mux
+  enable:
+    data_crc: "true"
+  disable:
+    data_crc: "false"
+
+test_script: "./pcache.py.data/pcache.sh"
