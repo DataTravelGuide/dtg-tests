@@ -1,20 +1,25 @@
-Run cbd-tests
+Data Travel Guide Test Suite
 
-1. install packages:
+This repository provides a collection of test utilities and scripts for projects
+maintained under the **Data Travel Guide** organization.  It was originally
+created for CBD specific testing but has since been extended to serve as the
+general test suite for other projects as well.
 
-# pip install avocado-framework avocado-framework-plugin-varianter-yaml-to-mux avocado-framework-plugin-result-html
-# apt install bpfcc-tools
+**Preparation phase – install packages**
 
-2. Edit local_conf and an example as below:
+```
+pip install avocado-framework avocado-framework-plugin-varianter-yaml-to-mux avocado-framework-plugin-result-html
+apt install bpfcc-tools
+```
 
-CBD_TESTS_XFSTESTS_DIR="/data/xfstests"
+**Execution phase – CBD test**
 
-XFSTESTS_SCRATCH_MNT="/mnt/scratch"
-XFSTESTS_TEST_MNT="/mnt/test"
+```
+avocado run --nrunner-max-parallel-tasks 1 ./cbdctrl.py -m ./cbdctrl.py.data/cbdctrl.yaml
+```
 
-FIOTEST_OUTFILE="output.cvs"
+**Execution phase – pcache test**
 
-CBD_TESTS_POST_TEST_CMDS=""
-
-3. run test:
-# bash test_all.sh
+```
+avocado run --nrunner-max-parallel-tasks 1 ./pcache.py -m ./pcache.py.data/pcache.yaml
+```
