@@ -16,9 +16,10 @@ class PcacheTest(Test):
         cmd = f"pwd;{env_vars} {self.params.get('test_script')}"
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
+        print(result.stdout)
+
         if result.returncode == 0:
             self.log.info("pcache script completed successfully")
-            self.log.debug(result.stdout)
         else:
             self.log.error("pcache script failed: %s", result.stderr)
             self.fail(result)
