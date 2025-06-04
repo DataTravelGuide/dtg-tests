@@ -14,4 +14,8 @@ crc: !mux
   disable:
     data_crc: "false"
 
-test_script: "./pcache.py.data/pcache.sh"
+test_script: !mux
+  default:
+    test_script: "./pcache.py.data/pcache.sh"
+  xfstests:
+    test_script: "./pcache.py.data/pcache_xfstests.sh"

@@ -1,0 +1,35 @@
+#!/bin/bash
+set -ex
+
+# Default paths if not provided by environment
+: "${linux_path:=/workspace/linux_compile}"
+: "${cache_dev0:=/dev/pmem0}"
+: "${cache_dev1:=/dev/pmem1}"
+: "${data_crc:=false}"
+: "${gc_percent:=}"
+
+: "${TEST_MNT:=/mnt/test}"
+: "${SCRATCH_MNT:=/mnt/scratch}"
+
+cleanup() {
+    sudo umount "${TEST_MNT}" 2>/dev/null || true
+    sudo umount "${SCRATCH_MNT}" 2>/dev/null || true
+    sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
+    sudo dmsetup remove pcache_ram0p2 2>/dev/null || true
+    sudo rmmod dm-pcache 2>/dev/null || true
+    sudo rmmod brd 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# Prepare pcache devices
+bash ./pcache.py.data/pcache.sh
+
+# Mount devices for xfstests
+sudo mkdir -p "${TEST_MNT}" "${SCRATCH_MNT}"
+sudo mount /dev/mapper/pcache_ram0p1 "${TEST_MNT}"
+sudo mount /dev/mapper/pcache_ram0p2 "${SCRATCH_MNT}"
+
+# Run a basic xfstests case
+cd /workspace/xfstests
+./check generic/001
+
