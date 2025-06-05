@@ -91,6 +91,36 @@ done
 
 # Record pcache status once the cache is flushed
 status_before_remove=$(sudo dmsetup status pcache_ram0p1)
+read -ra status_fields <<< "$status_before_remove"
+status_before_len=${#status_fields[@]}
+before_key_head=${status_fields[$((status_before_len - 3))]}
+before_dirty_tail=${status_fields[$((status_before_len - 2))]}
+before_key_tail=${status_fields[$((status_before_len - 1))]}
+
+sudo dmsetup remove pcache_ram0p1
+
+echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+# Suspend the newly created pcache device and ensure reload fails
+sudo dmsetup suspend pcache_ram0p1
+if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup reload pcache_ram0p1; then
+    echo "dmsetup reload unexpectedly succeeded"
+    exit 1
+fi
+sudo dmsetup resume pcache_ram0p1
+# Capture status after recreating pcache
+status_after_create=$(sudo dmsetup status pcache_ram0p1)
+read -ra status_fields <<< "$status_after_create"
+status_after_len=${#status_fields[@]}
+after_key_head=${status_fields[$((status_after_len - 3))]}
+after_dirty_tail=${status_fields[$((status_after_len - 2))]}
+after_key_tail=${status_fields[$((status_after_len - 1))]}
+# Verify key fields match after recreation
+if [[ "${before_key_head}" != "${after_key_head}" ||
+      "${before_dirty_tail}" != "${after_dirty_tail}" ||
+      "${before_key_tail}" != "${after_key_tail}" ]]; then
+    echo "pcache status mismatch after recreate"
+    exit 1
+fi
 
 sudo dmsetup remove pcache_ram0p1
 
@@ -105,20 +135,6 @@ sudo umount /mnt/pcache
 dd if=/dev/zero of=${cache_dev0} bs=1M count=10
 
 echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
-# Suspend the newly created pcache device and ensure reload fails
-sudo dmsetup suspend pcache_ram0p1
-if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup reload pcache_ram0p1; then
-    echo "dmsetup reload unexpectedly succeeded"
-    exit 1
-fi
-sudo dmsetup resume pcache_ram0p1
-# Capture status after recreating pcache
-status_after_create=$(sudo dmsetup status pcache_ram0p1)
-# Verify status matches the one before removal
-if [[ "${status_before_remove}" != "${status_after_create}" ]]; then
-    echo "pcache status mismatch after recreate"
-    exit 1
-fi
 sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
