@@ -53,3 +53,63 @@ wait ${fio_pid} || true
 sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
 sudo rmmod brd 2>/dev/null || true
+
+# Scenario: flush cached data and verify persistence after removing pcache
+sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
+sudo insmod ${linux_path}/drivers/block/brd.ko rd_nr=1 rd_size=$((22*1024*1024))
+
+sudo parted /dev/ram0 mklabel gpt
+sudo sgdisk /dev/ram0 -n 1:1M:+10G
+
+dd if=/dev/zero of=${cache_dev0} bs=1M count=1
+
+SEC_NR=$(sudo blockdev --getsz /dev/ram0p1)
+echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+
+sudo mkfs.ext4 -F /dev/mapper/pcache_ram0p1
+sudo mkdir -p /mnt/pcache
+sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
+
+dd if=/dev/urandom of=/mnt/pcache/persistfile bs=1M count=5
+orig_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
+sudo umount /mnt/pcache
+
+sudo dmsetup message pcache_ram0p1 0 gc_percent 0
+
+while true; do
+    status=$(sudo dmsetup status pcache_ram0p1)
+    read -ra fields <<< "$status"
+    len=${#fields[@]}
+    key_head=${fields[$((len - 3))]}
+    dirty_tail=${fields[$((len - 2))]}
+    key_tail=${fields[$((len - 1))]}
+    if [[ "$key_head" == "$dirty_tail" ]]; then
+        break
+    fi
+    sleep 1
+done
+
+sudo dmsetup remove pcache_ram0p1
+
+sudo mount /dev/ram0p1 /mnt/pcache
+new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
+if [[ "${orig_md5}" != "${new_md5}" ]]; then
+    echo "MD5 mismatch after removing pcache"
+    exit 1
+fi
+sudo umount /mnt/pcache
+
+dd if=/dev/zero of=${cache_dev0} bs=1M count=10
+
+echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
+new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
+if [[ "${orig_md5}" != "${new_md5}" ]]; then
+    echo "MD5 mismatch after recreating pcache"
+    exit 1
+fi
+sudo umount /mnt/pcache
+
+sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
+sudo rmmod dm-pcache 2>/dev/null || true
+sudo rmmod brd 2>/dev/null || true
