@@ -5,23 +5,21 @@ set -ex
 : "${cache_dev0:=/dev/pmem0}"
 : "${data_crc:=false}"
 : "${gc_percent:=}"
+: "${data_dev0:=/dev/ram0p1}"
 
 sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
-sudo rmmod brd 2>/dev/null || true
 
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
-sudo insmod ${linux_path}/drivers/block/brd.ko rd_nr=1 rd_size=$((22*1024*1024))
 
-sudo parted /dev/ram0 mklabel gpt
-sudo sgdisk /dev/ram0 -n 1:1M:+10G
+
 
 dd if=/dev/zero of=${cache_dev0} bs=1M count=1
 
-SEC_NR=$(sudo blockdev --getsz /dev/ram0p1)
+SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 
 # Expect dmsetup create to fail with an invalid cache mode
-if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 invalid ${data_crc}" | \
+if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} invalid ${data_crc}" | \
     sudo dmsetup create pcache_invalid; then
     echo "dmsetup create succeeded with invalid cache_mode"
     sudo dmsetup remove pcache_invalid
@@ -29,7 +27,7 @@ if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 invalid ${data_crc}" | \
 fi
 
 # Expect dmsetup create to fail with an invalid data_crc value
-if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback invalid" | \
+if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback invalid" | \
     sudo dmsetup create pcache_invalid; then
     echo "dmsetup create succeeded with invalid data_crc"
     sudo dmsetup remove pcache_invalid
@@ -37,7 +35,7 @@ if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback invalid" | \
 fi
 
 # Expect dmsetup create to fail if cache_mode is empty
-if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1  ${data_crc}" | \
+if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0}  ${data_crc}" | \
     sudo dmsetup create pcache_invalid; then
     echo "dmsetup create succeeded with empty cache_mode"
     sudo dmsetup remove pcache_invalid
@@ -45,14 +43,14 @@ if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1  ${data_crc}" | \
 fi
 
 # Expect dmsetup create to fail if data_crc is empty
-if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback " | \
+if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback " | \
     sudo dmsetup create pcache_invalid; then
     echo "dmsetup create succeeded with empty data_crc"
     sudo dmsetup remove pcache_invalid
     exit 1
 fi
 
-echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
 
 # gc_percent message sanity checks
 if sudo dmsetup message pcache_ram0p1 0 gc_percent 91; then
@@ -89,7 +87,7 @@ sudo umount /mnt/pcache
 
 sudo dmsetup remove pcache_ram0p1
 
-echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
 sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/testfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
@@ -112,7 +110,7 @@ if [[ "${data_crc}" == "true" ]]; then
 else
     new_crc=true
 fi
-if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${new_crc}" | \
+if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${new_crc}" | \
     sudo dmsetup create pcache_ram0p1; then
     echo "dmsetup create succeeded after data_crc change"
     sudo dmsetup remove pcache_ram0p1
@@ -120,19 +118,15 @@ if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${new_crc}" | \
 fi
 
 sudo rmmod dm-pcache 2>/dev/null || true
-sudo rmmod brd 2>/dev/null || true
 
 # Scenario: flush cached data and verify persistence after removing pcache
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
-sudo insmod ${linux_path}/drivers/block/brd.ko rd_nr=1 rd_size=$((22*1024*1024))
 
-sudo parted /dev/ram0 mklabel gpt
-sudo sgdisk /dev/ram0 -n 1:1M:+10G
 
 dd if=/dev/zero of=${cache_dev0} bs=1M count=1
 
-SEC_NR=$(sudo blockdev --getsz /dev/ram0p1)
-echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+SEC_NR=$(sudo blockdev --getsz ${data_dev0})
+echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
 
 sudo mkfs.ext4 -F /dev/mapper/pcache_ram0p1
 sudo mkdir -p /mnt/pcache
@@ -167,10 +161,10 @@ before_key_tail=${status_fields[$((status_before_len - 1))]}
 
 sudo dmsetup remove pcache_ram0p1
 
-echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
 # Suspend the newly created pcache device and ensure reload fails
 sudo dmsetup suspend pcache_ram0p1
-if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup reload pcache_ram0p1; then
+if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup reload pcache_ram0p1; then
     echo "dmsetup reload unexpectedly succeeded"
     exit 1
 fi
@@ -192,7 +186,7 @@ fi
 
 sudo dmsetup remove pcache_ram0p1
 
-sudo mount /dev/ram0p1 /mnt/pcache
+sudo mount ${data_dev0} /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
     echo "MD5 mismatch after removing pcache"
@@ -202,7 +196,7 @@ sudo umount /mnt/pcache
 
 dd if=/dev/zero of=${cache_dev0} bs=1M count=10
 
-echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
 sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
@@ -213,4 +207,3 @@ sudo umount /mnt/pcache
 
 sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
-sudo rmmod brd 2>/dev/null || true

@@ -17,7 +17,6 @@ cleanup() {
     sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
     sudo dmsetup remove pcache_ram0p2 2>/dev/null || true
     sudo rmmod dm-pcache 2>/dev/null || true
-    sudo rmmod brd 2>/dev/null || true
 }
 trap cleanup EXIT
 
