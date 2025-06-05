@@ -72,6 +72,7 @@ sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
 
 dd if=/dev/urandom of=/mnt/pcache/persistfile bs=1M count=5
 orig_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
+sudo umount /mnt/pcache
 
 sudo dmsetup message pcache_ram0p1 0 gc_percent 0
 
@@ -82,19 +83,29 @@ while true; do
     key_head=${fields[$((len - 3))]}
     dirty_tail=${fields[$((len - 2))]}
     key_tail=${fields[$((len - 1))]}
-    if [[ "$key_head" == "$dirty_tail" ]]; then
+    if [[ "$key_tail" == "$dirty_tail" ]]; then
         break
     fi
     sleep 1
 done
 
-sudo umount /mnt/pcache
 sudo dmsetup remove pcache_ram0p1
 
 sudo mount /dev/ram0p1 /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
     echo "MD5 mismatch after removing pcache"
+    exit 1
+fi
+sudo umount /mnt/pcache
+
+dd if=/dev/zero of=${cache_dev0} bs=1M count=10
+
+echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
+new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
+if [[ "${orig_md5}" != "${new_md5}" ]]; then
+    echo "MD5 mismatch after recreating pcache"
     exit 1
 fi
 sudo umount /mnt/pcache
