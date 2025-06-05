@@ -19,7 +19,61 @@ sudo sgdisk /dev/ram0 -n 1:1M:+10G
 dd if=/dev/zero of=${cache_dev0} bs=1M count=1
 
 SEC_NR=$(sudo blockdev --getsz /dev/ram0p1)
+
+# Expect dmsetup create to fail with an invalid cache mode
+if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 invalid ${data_crc}" | \
+    sudo dmsetup create pcache_invalid; then
+    echo "dmsetup create succeeded with invalid cache_mode"
+    sudo dmsetup remove pcache_invalid
+    exit 1
+fi
+
+# Expect dmsetup create to fail with an invalid data_crc value
+if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback invalid" | \
+    sudo dmsetup create pcache_invalid; then
+    echo "dmsetup create succeeded with invalid data_crc"
+    sudo dmsetup remove pcache_invalid
+    exit 1
+fi
+
+# Expect dmsetup create to fail if cache_mode is empty
+if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1  ${data_crc}" | \
+    sudo dmsetup create pcache_invalid; then
+    echo "dmsetup create succeeded with empty cache_mode"
+    sudo dmsetup remove pcache_invalid
+    exit 1
+fi
+
+# Expect dmsetup create to fail if data_crc is empty
+if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback " | \
+    sudo dmsetup create pcache_invalid; then
+    echo "dmsetup create succeeded with empty data_crc"
+    sudo dmsetup remove pcache_invalid
+    exit 1
+fi
+
 echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+
+# gc_percent message sanity checks
+if sudo dmsetup message pcache_ram0p1 0 gc_percent 91; then
+    echo "dmsetup message succeeded with gc_percent > 90"
+    exit 1
+fi
+
+if sudo dmsetup message pcache_ram0p1 0 gc_percent -1; then
+    echo "dmsetup message succeeded with negative gc_percent"
+    exit 1
+fi
+
+if sudo dmsetup message pcache_ram0p1 0 gc_percent ""; then
+    echo "dmsetup message succeeded with empty gc_percent"
+    exit 1
+fi
+
+if sudo dmsetup message pcache_ram0p1 0 gc_percent bad; then
+    echo "dmsetup message succeeded with string gc_percent"
+    exit 1
+fi
 
 if [[ -n "${gc_percent}" ]]; then
     sudo dmsetup message pcache_ram0p1 0 gc_percent ${gc_percent}
@@ -51,6 +105,20 @@ sudo dmsetup remove --force pcache_ram0p1 || true
 wait ${fio_pid} || true
 
 sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
+
+# Attempt to recreate with a different data_crc value and expect failure
+if [[ "${data_crc}" == "true" ]]; then
+    new_crc=false
+else
+    new_crc=true
+fi
+if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${new_crc}" | \
+    sudo dmsetup create pcache_ram0p1; then
+    echo "dmsetup create succeeded after data_crc change"
+    sudo dmsetup remove pcache_ram0p1
+    exit 1
+fi
+
 sudo rmmod dm-pcache 2>/dev/null || true
 sudo rmmod brd 2>/dev/null || true
 
