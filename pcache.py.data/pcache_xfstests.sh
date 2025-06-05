@@ -7,6 +7,11 @@ set -ex
 : "${cache_dev1:=/dev/pmem1}"
 : "${data_crc:=false}"
 : "${gc_percent:=}"
+: "${data_dev0:?data_dev0 not set}"
+: "${data_dev1:?data_dev1 not set}"
+
+dm_name0="pcache_$(basename ${data_dev0})"
+dm_name1="pcache_$(basename ${data_dev1})"
 
 : "${TEST_MNT:=/mnt/test}"
 : "${SCRATCH_MNT:=/mnt/scratch}"
@@ -14,10 +19,9 @@ set -ex
 cleanup() {
     sudo umount "${TEST_MNT}" 2>/dev/null || true
     sudo umount "${SCRATCH_MNT}" 2>/dev/null || true
-    sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
-    sudo dmsetup remove pcache_ram0p2 2>/dev/null || true
+    sudo dmsetup remove ${dm_name0} 2>/dev/null || true
+    sudo dmsetup remove ${dm_name1} 2>/dev/null || true
     sudo rmmod dm-pcache 2>/dev/null || true
-    sudo rmmod brd 2>/dev/null || true
 }
 trap cleanup EXIT
 

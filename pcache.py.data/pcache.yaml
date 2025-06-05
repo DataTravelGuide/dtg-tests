@@ -1,6 +1,8 @@
 linux_path: "/workspace/linux_compile"
 cache_dev0: "/dev/pmem0"
 cache_dev1: "/dev/pmem1"
+data_dev0: "/dev/ram0p1"
+data_dev1: "/dev/ram0p2"
 
 gc: !mux
   gc0:
