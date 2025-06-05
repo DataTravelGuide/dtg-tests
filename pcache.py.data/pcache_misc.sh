@@ -83,7 +83,7 @@ while true; do
     key_head=${fields[$((len - 3))]}
     dirty_tail=${fields[$((len - 2))]}
     key_tail=${fields[$((len - 1))]}
-    if [[ "$key_head" == "$dirty_tail" ]]; then
+    if [[ "$key_head" == "$key_tail" ]]; then
         break
     fi
     sleep 1
