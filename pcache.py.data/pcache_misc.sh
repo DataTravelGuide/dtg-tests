@@ -44,13 +44,11 @@ if [[ "${orig_md5}" != "${new_md5}" ]]; then
 fi
 sudo umount /mnt/pcache
 
-sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
 fio --name=pcachetest --filename=/dev/mapper/pcache_ram0p1 --rw=randwrite --bs=4k --runtime=10 --time_based=1 --ioengine=sync --direct=1 &
 fio_pid=$!
 sleep 2
 sudo dmsetup remove --force pcache_ram0p1 || true
 wait ${fio_pid} || true
-sudo umount /mnt/pcache 2>/dev/null || true
 
 sudo dmsetup remove pcache_ram0p1 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
