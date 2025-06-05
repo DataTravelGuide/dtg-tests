@@ -7,8 +7,8 @@ set -ex
 : "${cache_dev1:=/dev/pmem1}"
 : "${data_crc:=false}"
 : "${gc_percent:=}"
-: "${data_dev0:=/dev/ram0p1}"
-: "${data_dev1:=/dev/ram0p2}"
+: "${data_dev0:?data_dev0 not set}"
+: "${data_dev1:?data_dev1 not set}"
 
 dm_name0="pcache_$(basename ${data_dev0})"
 dm_name1="pcache_$(basename ${data_dev1})"
