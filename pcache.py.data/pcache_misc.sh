@@ -89,6 +89,9 @@ while true; do
     sleep 1
 done
 
+# Record pcache status once the cache is flushed
+status_before_remove=$(sudo dmsetup status pcache_ram0p1)
+
 sudo dmsetup remove pcache_ram0p1
 
 sudo mount /dev/ram0p1 /mnt/pcache
@@ -102,6 +105,13 @@ sudo umount /mnt/pcache
 dd if=/dev/zero of=${cache_dev0} bs=1M count=10
 
 echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+# Capture status after recreating pcache
+status_after_create=$(sudo dmsetup status pcache_ram0p1)
+# Verify status matches the one before removal
+if [[ "${status_before_remove}" != "${status_after_create}" ]]; then
+    echo "pcache status mismatch after recreate"
+    exit 1
+fi
 sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
