@@ -3,8 +3,8 @@ cache_dev0: "/dev/pmem0"
 cache_dev1: "/dev/pmem1"
 
 gc: !mux
-  gc60:
-    gc_percent: "60"
+  gc0:
+    gc_percent: "0"
   gc80:
     gc_percent: "80"
 
