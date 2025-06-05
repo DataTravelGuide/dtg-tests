@@ -73,13 +73,16 @@ sudo mount /dev/mapper/pcache_ram0p1 /mnt/pcache
 dd if=/dev/urandom of=/mnt/pcache/persistfile bs=1M count=5
 orig_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 
+sudo dmsetup message pcache_ram0p1 0 gc_percent 0
+
 while true; do
     status=$(sudo dmsetup status pcache_ram0p1)
     read -ra fields <<< "$status"
     len=${#fields[@]}
+    key_head=${fields[$((len - 3))]}
     dirty_tail=${fields[$((len - 2))]}
     key_tail=${fields[$((len - 1))]}
-    if [[ "$key_tail" == "$dirty_tail" ]]; then
+    if [[ "$key_head" == "$dirty_tail" ]]; then
         break
     fi
     sleep 1
