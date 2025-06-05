@@ -105,6 +105,13 @@ sudo umount /mnt/pcache
 dd if=/dev/zero of=${cache_dev0} bs=1M count=10
 
 echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup create pcache_ram0p1
+# Suspend the newly created pcache device and ensure reload fails
+sudo dmsetup suspend pcache_ram0p1
+if echo "0 ${SEC_NR} pcache ${cache_dev0} /dev/ram0p1 writeback ${data_crc}" | sudo dmsetup reload pcache_ram0p1; then
+    echo "dmsetup reload unexpectedly succeeded"
+    exit 1
+fi
+sudo dmsetup resume pcache_ram0p1
 # Capture status after recreating pcache
 status_after_create=$(sudo dmsetup status pcache_ram0p1)
 # Verify status matches the one before removal
