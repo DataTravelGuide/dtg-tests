@@ -36,6 +36,15 @@ if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback invalid" | \
     exit 1
 fi
 
+# Expect dmsetup create to fail when cache and data devices are identical
+BAD_SEC_NR=$(sudo blockdev --getsz ${cache_dev0})
+if echo "0 ${BAD_SEC_NR} pcache ${cache_dev0} ${cache_dev0} writeback ${data_crc}" | \
+    sudo dmsetup create pcache_invalid; then
+    echo "dmsetup create succeeded with identical devices"
+    sudo dmsetup remove pcache_invalid
+    exit 1
+fi
+
 # Expect dmsetup create to fail if cache_mode is empty
 if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0}  ${data_crc}" | \
     sudo dmsetup create pcache_invalid; then
@@ -79,6 +88,12 @@ if [[ -n "${gc_percent}" ]]; then
     sudo dmsetup message ${dm_name0} 0 gc_percent ${gc_percent}
 fi
 
+# Expect dmsetup message to fail with an unknown command
+if sudo dmsetup message ${dm_name0} 0 invalid_cmd 1; then
+    echo "dmsetup message succeeded with unknown command"
+    exit 1
+fi
+
 sudo mkfs.ext4 -F /dev/mapper/${dm_name0}
 sudo mkdir -p /mnt/pcache
 sudo mount /dev/mapper/${dm_name0} /mnt/pcache
@@ -98,7 +113,7 @@ if [[ "${orig_md5}" != "${new_md5}" ]]; then
 fi
 sudo umount /mnt/pcache
 
-fio --name=pcachetest --filename=/dev/mapper/${dm_name0} --rw=randwrite --bs=4k --runtime=10 --time_based=1 --ioengine=sync --direct=1 &
+fio --name=pcachetest --filename=/dev/mapper/${dm_name0} --rw=randwrite --bs=4k --runtime=10 --time_based=1 --ioengine=libaio --direct=1 &
 fio_pid=$!
 sleep 2
 sudo dmsetup remove --force ${dm_name0} || true
@@ -203,6 +218,53 @@ sudo mount /dev/mapper/${dm_name0} /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
     echo "MD5 mismatch after recreating pcache"
+    exit 1
+fi
+sudo umount /mnt/pcache
+
+sudo dmsetup remove ${dm_name0} 2>/dev/null || true
+sudo rmmod dm-pcache 2>/dev/null || true
+
+# Scenario: verify data consistency under heavy IO load
+sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
+
+dd if=/dev/zero of=${cache_dev0} bs=1M count=1
+
+SEC_NR=$(sudo blockdev --getsz ${data_dev0})
+echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+
+sudo mkfs.ext4 -F /dev/mapper/${dm_name0}
+sudo mkdir -p /mnt/pcache
+sudo mount /dev/mapper/${dm_name0} /mnt/pcache
+
+dd if=/dev/urandom of=/mnt/pcache/heavyfile bs=1M count=50
+orig_md5=$(md5sum /mnt/pcache/heavyfile | awk '{print $1}')
+
+if [[ -n "${gc_percent}" ]]; then
+    sudo dmsetup message ${dm_name0} 0 gc_percent ${gc_percent}
+fi
+
+# Use fio to copy heavyfile into loadfile under heavy load
+fio --name=pcacheheavy --ioengine=splice \
+    --filename=/mnt/pcache/loadfile --splice_fd_in=/mnt/pcache/heavyfile \
+    --size=50m --runtime=20 --time_based=1 --bs=4k --direct=1 \
+    --numjobs=4 --iodepth=16
+
+new_md5=$(md5sum /mnt/pcache/loadfile | awk '{print $1}')
+if [[ "${orig_md5}" != "${new_md5}" ]]; then
+    echo "MD5 mismatch after fio copy"
+    exit 1
+fi
+
+sync
+sudo umount /mnt/pcache
+sudo dmsetup remove ${dm_name0}
+
+echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+sudo mount /dev/mapper/${dm_name0} /mnt/pcache
+new_md5=$(md5sum /mnt/pcache/heavyfile | awk '{print $1}')
+if [[ "${orig_md5}" != "${new_md5}" ]]; then
+    echo "MD5 mismatch after heavy IO"
     exit 1
 fi
 sudo umount /mnt/pcache
