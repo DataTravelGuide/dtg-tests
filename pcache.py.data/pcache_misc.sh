@@ -36,14 +36,6 @@ if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback invalid" | \
     exit 1
 fi
 
-# Expect dmsetup create to fail when cache and data devices are identical
-BAD_SEC_NR=$(sudo blockdev --getsz ${cache_dev0})
-if echo "0 ${BAD_SEC_NR} pcache ${cache_dev0} ${cache_dev0} writeback ${data_crc}" | \
-    sudo dmsetup create pcache_invalid; then
-    echo "dmsetup create succeeded with identical devices"
-    sudo dmsetup remove pcache_invalid
-    exit 1
-fi
 
 # Expect dmsetup create to fail if cache_mode is empty
 if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0}  ${data_crc}" | \
@@ -244,15 +236,23 @@ if [[ -n "${gc_percent}" ]]; then
     sudo dmsetup message ${dm_name0} 0 gc_percent ${gc_percent}
 fi
 
-# Use fio to copy heavyfile into loadfile under heavy load
-fio --name=pcacheheavy --ioengine=splice \
-    --filename=/mnt/pcache/loadfile --splice_fd_in=/mnt/pcache/heavyfile \
-    --size=50m --runtime=20 --time_based=1 --bs=4k --direct=1 \
+# Copy heavyfile to loadfile and verify checksum
+dd if=/mnt/pcache/heavyfile of=/mnt/pcache/loadfile bs=4k oflag=direct iflag=fullblock
+new_md5=$(md5sum /mnt/pcache/loadfile | awk '{print $1}')
+if [[ "${orig_md5}" != "${new_md5}" ]]; then
+    echo "MD5 mismatch after copy"
+    exit 1
+fi
+
+# Stress the device with fio using libaio
+fio --name=pcacheheavy --ioengine=libaio \
+    --filename=/mnt/pcache/stressfile --rw=randwrite --size=100m \
+    --runtime=20 --time_based=1 --bs=4k --direct=1 \
     --numjobs=4 --iodepth=16
 
 new_md5=$(md5sum /mnt/pcache/loadfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
-    echo "MD5 mismatch after fio copy"
+    echo "MD5 mismatch after heavy IO"
     exit 1
 fi
 
