@@ -57,7 +57,31 @@ if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} 
 fi
 
 
-echo "DEBUG: case 5 - basic create and gc_percent message checks"
+echo "DEBUG: case 5 - create without optional arguments"
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0}"
+sudo dmsetup remove ${dm_name0}
+
+echo "DEBUG: case 6 - cache_mode only"
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 2 cache_mode writeback"
+sudo dmsetup remove ${dm_name0}
+
+echo "DEBUG: case 7 - data_crc only"
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 2 data_crc true"
+sudo dmsetup remove ${dm_name0}
+
+echo "DEBUG: case 8 - invalid number_of_optional_arguments should fail"
+if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} INVAL cache_mode writeback data_crc ${data_crc}"; then
+    echo "dmsetup create succeeded with invalid optional args"
+    sudo dmsetup remove pcache_invalid
+    exit 1
+fi
+if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 100 cache_mode writeback data_crc ${data_crc}"; then
+    echo "dmsetup create succeeded with invalid optional args"
+    sudo dmsetup remove pcache_invalid
+    exit 1
+fi
+
+echo "DEBUG: case 9 - basic create and gc_percent message checks"
 sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
 
 # gc_percent message sanity checks
@@ -91,7 +115,7 @@ if sudo dmsetup message ${dm_name0} 0 invalid_cmd 1; then
     exit 1
 fi
 
-echo "DEBUG: case 6 - data persistence after remove and recreate"
+echo "DEBUG: case 10 - data persistence after remove and recreate"
 sudo mkfs.ext4 -F /dev/mapper/${dm_name0}
 sudo mkdir -p /mnt/pcache
 sudo mount /dev/mapper/${dm_name0} /mnt/pcache
@@ -111,7 +135,7 @@ if [[ "${orig_md5}" != "${new_md5}" ]]; then
 fi
 sudo umount /mnt/pcache
 
-echo "DEBUG: case 7 - remove pcache while fio running"
+echo "DEBUG: case 11 - remove pcache while fio running"
 fio --name=pcachetest --filename=/dev/mapper/${dm_name0} --rw=randwrite --bs=4k --runtime=10 --time_based=1 --ioengine=libaio --direct=1 &
 fio_pid=$!
 sleep 2
@@ -121,7 +145,7 @@ wait ${fio_pid} || true
 sudo dmsetup remove ${dm_name0} 2>/dev/null || true
 
 
-echo "DEBUG: case 8 - dmsetup create should fail after data_crc change"
+echo "DEBUG: case 12 - dmsetup create should fail after data_crc change"
 # Attempt to recreate with a different data_crc value and expect failure
 if [[ "${data_crc}" == "true" ]]; then
     new_crc=false
@@ -136,7 +160,7 @@ fi
 
 sudo rmmod dm-pcache 2>/dev/null || true
 
-echo "DEBUG: case 9 - flush cached data and verify persistence"
+echo "DEBUG: case 13 - flush cached data and verify persistence"
 # Scenario: flush cached data and verify persistence after removing pcache
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 
@@ -226,7 +250,7 @@ sudo umount /mnt/pcache
 sudo dmsetup remove ${dm_name0} 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
 
-echo "DEBUG: case 10 - verify data consistency under heavy IO"
+echo "DEBUG: case 14 - verify data consistency under heavy IO"
 # Scenario: verify data consistency under heavy IO load
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 
