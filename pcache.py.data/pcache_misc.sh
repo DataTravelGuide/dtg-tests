@@ -23,8 +23,7 @@ SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 echo "DEBUG: case 1 - invalid cache mode should fail"
 
 # Expect dmsetup create to fail with an invalid cache mode
-if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} invalid ${data_crc}" | \
-    sudo dmsetup create pcache_invalid; then
+if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode invalid data_crc ${data_crc}"; then
     echo "dmsetup create succeeded with invalid cache_mode"
     sudo dmsetup remove pcache_invalid
     exit 1
@@ -32,8 +31,7 @@ fi
 
 echo "DEBUG: case 2 - invalid data_crc should fail"
 # Expect dmsetup create to fail with an invalid data_crc value
-if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback invalid" | \
-    sudo dmsetup create pcache_invalid; then
+if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc invalid"; then
     echo "dmsetup create succeeded with invalid data_crc"
     sudo dmsetup remove pcache_invalid
     exit 1
@@ -43,8 +41,7 @@ fi
 
 echo "DEBUG: case 3 - empty cache_mode should fail"
 # Expect dmsetup create to fail if cache_mode is empty
-if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0}  ${data_crc}" | \
-    sudo dmsetup create pcache_invalid; then
+if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 data_crc ${data_crc}"; then
     echo "dmsetup create succeeded with empty cache_mode"
     sudo dmsetup remove pcache_invalid
     exit 1
@@ -53,8 +50,7 @@ fi
 
 echo "DEBUG: case 4 - empty data_crc should fail"
 # Expect dmsetup create to fail if data_crc is empty
-if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback " | \
-    sudo dmsetup create pcache_invalid; then
+if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback"; then
     echo "dmsetup create succeeded with empty data_crc"
     sudo dmsetup remove pcache_invalid
     exit 1
@@ -62,7 +58,7 @@ fi
 
 
 echo "DEBUG: case 5 - basic create and gc_percent message checks"
-echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
 
 # gc_percent message sanity checks
 if sudo dmsetup message ${dm_name0} 0 gc_percent 91; then
@@ -106,7 +102,7 @@ sudo umount /mnt/pcache
 
 sudo dmsetup remove ${dm_name0}
 
-echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
 sudo mount /dev/mapper/${dm_name0} /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/testfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
@@ -132,8 +128,7 @@ if [[ "${data_crc}" == "true" ]]; then
 else
     new_crc=true
 fi
-if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${new_crc}" | \
-    sudo dmsetup create ${dm_name0}; then
+if sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${new_crc}"; then
     echo "dmsetup create succeeded after data_crc change"
     sudo dmsetup remove ${dm_name0}
     exit 1
@@ -149,7 +144,7 @@ sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 dd if=/dev/zero of=${cache_dev0} bs=1M count=1
 
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
-echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
 
 sudo mkfs.ext4 -F /dev/mapper/${dm_name0}
 sudo mkdir -p /mnt/pcache
@@ -184,10 +179,10 @@ before_key_tail=${status_fields[$((status_before_len - 1))]}
 
 sudo dmsetup remove ${dm_name0}
 
-echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
 # Suspend the newly created pcache device and ensure reload fails
 sudo dmsetup suspend ${dm_name0}
-if echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup reload ${dm_name0}; then
+if sudo dmsetup reload ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"; then
     echo "dmsetup reload unexpectedly succeeded"
     exit 1
 fi
@@ -219,7 +214,7 @@ sudo umount /mnt/pcache
 
 dd if=/dev/zero of=${cache_dev0} bs=1M count=10
 
-echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
 sudo mount /dev/mapper/${dm_name0} /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
@@ -238,7 +233,7 @@ sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 dd if=/dev/zero of=${cache_dev0} bs=1M count=1
 
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
-echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
 
 sudo mkfs.ext4 -F /dev/mapper/${dm_name0}
 sudo mkdir -p /mnt/pcache
@@ -275,7 +270,7 @@ sync
 sudo umount /mnt/pcache
 sudo dmsetup remove ${dm_name0}
 
-echo "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} writeback ${data_crc}" | sudo dmsetup create ${dm_name0}
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
 sudo mount /dev/mapper/${dm_name0} /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/heavyfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then
