@@ -15,8 +15,9 @@ sudo rmmod dm-pcache 2>/dev/null || true
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 
 reset_pmem() {
-    dd if=/dev/zero of=/dev/pmem0 bs=1M count=1
-    dd if=/dev/zero of=/dev/pmem1 bs=1M count=1
+    dd if=/dev/zero of=/dev/pmem0 bs=1M count=1 oflag=direct
+    dd if=/dev/zero of=/dev/pmem1 bs=1M count=1 oflag=direct
+    sync
 }
 
 reset_pmem
@@ -126,7 +127,6 @@ if sudo dmsetup message ${dm_name0} 0 invalid_cmd 1; then
     exit 1
 fi
 
-reset_pmem
 echo "DEBUG: case 10 - data persistence after remove and recreate"
 sudo mkfs.ext4 -F /dev/mapper/${dm_name0}
 sudo mkdir -p /mnt/pcache
@@ -160,6 +160,11 @@ sudo dmsetup remove ${dm_name0} 2>/dev/null || true
 
 reset_pmem
 echo "DEBUG: case 12 - dmsetup create should fail after data_crc change"
+
+SEC_NR=$(sudo blockdev --getsz ${data_dev0})
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
+sudo dmsetup remove ${dm_name0}
+
 # Attempt to recreate with a different data_crc value and expect failure
 if [[ "${data_crc}" == "true" ]]; then
     new_crc=false
