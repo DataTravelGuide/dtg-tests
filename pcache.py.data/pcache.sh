@@ -21,8 +21,8 @@ sudo rmmod dm-pcache 2>/dev/null || true
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 
 
-dd if=/dev/zero of=/dev/pmem0 bs=1M count=1
-dd if=/dev/zero of=/dev/pmem1 bs=1M count=1
+dd if=/dev/zero of=${cache_dev0} bs=1M count=1
+dd if=/dev/zero of=${cache_dev1} bs=1M count=1
 
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 sudo dmsetup create "${dm_name0}" --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"

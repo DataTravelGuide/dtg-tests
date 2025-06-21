@@ -15,8 +15,7 @@ sudo rmmod dm-pcache 2>/dev/null || true
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 
 reset_pmem() {
-    dd if=/dev/zero of=/dev/pmem0 bs=1M count=1 oflag=direct
-    dd if=/dev/zero of=/dev/pmem1 bs=1M count=1 oflag=direct
+    dd if=/dev/zero of=${cache_dev0} bs=1M count=1 oflag=direct
     sync
 }
 
