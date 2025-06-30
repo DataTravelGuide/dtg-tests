@@ -21,7 +21,7 @@ reset_pmem() {
 export linux_path cache_dev0 data_crc gc_percent data_dev0 dm_name0
 export -f reset_pmem
 
-test_dir="$(dirname "$0")/pcache_mics_tests"
+test_dir="$(dirname "$0")/pcache_misc_tests"
 
 for tc in "$test_dir"/*.sh; do
     echo "===== Running $(basename "$tc") ====="
