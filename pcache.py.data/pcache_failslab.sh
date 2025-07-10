@@ -2,9 +2,9 @@
 set -euo pipefail
 
 DBG=/sys/kernel/debug/failslab
-PROB=10
+PROB=50
 INTERVAL=10
-TIMES=100
+TIMES=-1
 VERBOSE=1
 
 cleanup() {
