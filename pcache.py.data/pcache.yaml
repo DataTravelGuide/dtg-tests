@@ -23,3 +23,5 @@ test_script: !mux
       test_script: "./pcache.py.data/pcache_xfstests.sh"
     misc:
       test_script: "./pcache.py.data/pcache_misc.sh"
+    failslab:
+      test_script: "./pcache.py.data/pcache_failslab.sh"
