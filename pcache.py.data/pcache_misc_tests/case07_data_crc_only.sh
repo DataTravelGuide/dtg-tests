@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+: "${cache_mode:=writeback}"
 reset_pmem
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 

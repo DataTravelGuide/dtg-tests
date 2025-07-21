@@ -4,6 +4,7 @@ set -ex
 # Default values
 : "${data_crc:=false}"
 : "${gc_percent:=}"
+: "${cache_mode:=writeback}"
 : "${data_dev0:?data_dev0 not set}"
 : "${data_dev1:?data_dev1 not set}"
 
@@ -25,9 +26,9 @@ dd if=/dev/zero of=${cache_dev0} bs=1M count=1
 dd if=/dev/zero of=${cache_dev1} bs=1M count=1
 
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
-sudo dmsetup create "${dm_name0}" --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
+sudo dmsetup create "${dm_name0}" --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
 SEC_NR=$(sudo blockdev --getsz ${data_dev1})
-sudo dmsetup create "${dm_name1}" --table "0 ${SEC_NR} pcache ${cache_dev1} ${data_dev1} 4 cache_mode writeback data_crc ${data_crc}"
+sudo dmsetup create "${dm_name1}" --table "0 ${SEC_NR} pcache ${cache_dev1} ${data_dev1} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
 
 # Tune GC threshold if provided
 if [[ -n "${gc_percent}" ]]; then

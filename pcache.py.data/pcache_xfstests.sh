@@ -7,6 +7,7 @@ set -ex
 : "${cache_dev1:=/dev/pmem1}"
 : "${data_crc:=false}"
 : "${gc_percent:=}"
+: "${cache_mode:=writeback}"
 : "${data_dev0:?data_dev0 not set}"
 : "${data_dev1:?data_dev1 not set}"
 

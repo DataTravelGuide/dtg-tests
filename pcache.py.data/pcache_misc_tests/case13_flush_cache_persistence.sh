@@ -1,12 +1,13 @@
 #!/bin/bash
 set -e
+: "${cache_mode:=writeback}"
 reset_pmem
 
 echo "DEBUG: case 13 - flush cached data and verify persistence"
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
-sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
 
 sudo mkfs.ext4 -F /dev/mapper/${dm_name0}
 sudo mkdir -p /mnt/pcache
@@ -40,9 +41,9 @@ before_key_tail=${status_fields[$((status_before_len - 1))]}
 
 sudo dmsetup remove ${dm_name0}
 
-sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
 sudo dmsetup suspend ${dm_name0}
-if sudo dmsetup reload ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"; then
+if sudo dmsetup reload ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"; then
     echo "dmsetup reload unexpectedly succeeded"
     exit 1
 fi
@@ -72,7 +73,7 @@ sudo umount /mnt/pcache
 
 reset_pmem
 
-sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
 sudo mount /dev/mapper/${dm_name0} /mnt/pcache
 new_md5=$(md5sum /mnt/pcache/persistfile | awk '{print $1}')
 if [[ "${orig_md5}" != "${new_md5}" ]]; then

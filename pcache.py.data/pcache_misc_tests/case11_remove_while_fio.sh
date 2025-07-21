@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+: "${cache_mode:=writeback}"
 reset_pmem
 
 echo "DEBUG: case 11 - remove pcache while fio running"

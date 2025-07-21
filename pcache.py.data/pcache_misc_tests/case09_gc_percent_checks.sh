@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
+: "${cache_mode:=writeback}"
 reset_pmem
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 
 echo "DEBUG: case 9 - basic create and gc_percent message checks"
-sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode writeback data_crc ${data_crc}"
+sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
 
 # gc_percent message sanity checks
 if sudo dmsetup message ${dm_name0} 0 gc_percent 91; then
