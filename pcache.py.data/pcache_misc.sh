@@ -24,9 +24,9 @@ export -f reset_pmem
 test_dir="$(dirname "$0")/pcache_misc_tests"
 
 for tc in "$test_dir"/*.sh; do
-    echo "===== Running $(basename "$tc") ====="
+    echo "===== Running $(basename "$tc") =====" | sudo tee /dev/kmsg
     bash "$tc"
-    echo "===== Finished $(basename "$tc") ====="
+    echo "===== Finished $(basename "$tc") =====" | sudo tee /dev/kmsg
 done
 
 sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
