@@ -45,3 +45,5 @@ if sudo dmsetup message ${dm_name0} 0 invalid_cmd 1; then
     echo "dmsetup message succeeded with unknown command"
     exit 1
 fi
+sudo dmsetup remove ${dm_name0} 2>/dev/null || true
+sudo rmmod dm-pcache 2>/dev/null || true

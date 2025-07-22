@@ -20,3 +20,4 @@ sudo dmsetup remove --force ${dm_name0} || true
 wait ${fio_pid} || true
 
 sudo dmsetup remove ${dm_name0} 2>/dev/null || true
+sudo rmmod dm-pcache 2>/dev/null || true

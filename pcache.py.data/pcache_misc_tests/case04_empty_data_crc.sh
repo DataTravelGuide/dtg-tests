@@ -18,3 +18,5 @@ if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} 
     sudo dmsetup remove pcache_invalid
     exit 1
 fi
+sudo dmsetup remove ${dm_name0} 2>/dev/null || true
+sudo rmmod dm-pcache 2>/dev/null || true

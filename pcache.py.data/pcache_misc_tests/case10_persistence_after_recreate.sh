@@ -32,3 +32,5 @@ if [[ "${orig_md5}" != "${new_md5}" ]]; then
     exit 1
 fi
 sudo umount /mnt/pcache
+sudo dmsetup remove ${dm_name0} 2>/dev/null || true
+sudo rmmod dm-pcache 2>/dev/null || true
