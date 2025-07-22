@@ -9,6 +9,10 @@ cache_mode: !mux
     cache_mode: "writeback"
   writethrough:
     cache_mode: "writethrough"
+  writearound:
+    cache_mode: "writearound"
+  writeonly:
+    cache_mode: "writeonly"
 
 gc: !mux
   gc0:
