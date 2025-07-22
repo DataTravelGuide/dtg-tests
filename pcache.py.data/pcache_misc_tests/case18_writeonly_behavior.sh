@@ -24,6 +24,19 @@ sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data
 dd if="${src_file}" of=/dev/mapper/${dm_name0} bs=1M
 sync
 
+sudo dmsetup message ${dm_name0} 0 gc_percent 0
+while true; do
+    status=$(sudo dmsetup status ${dm_name0})
+    read -ra fields <<< "$status"
+    len=${#fields[@]}
+    key_head=${fields[$((len - 3))]}
+    key_tail=${fields[$((len - 1))]}
+    if [[ "$key_head" == "$key_tail" ]]; then
+        break
+    fi
+    sleep 1
+done
+
 sudo dmsetup remove ${dm_name0}
 
 sudo dd if=/dev/zero of=${cache_dev0} bs=1M count=1
