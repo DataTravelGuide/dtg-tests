@@ -10,6 +10,7 @@ if ! sudo dmsetup create ${dm_name0}_probe --table "0 ${SEC_NR} pcache ${cache_d
     exit 0
 fi
 sudo dmsetup remove ${dm_name0}_probe
+reset_pmem
 
 echo "DEBUG: case 4 - empty data_crc should fail"
 if sudo dmsetup create pcache_invalid --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode}"; then

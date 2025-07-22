@@ -10,6 +10,7 @@ if ! sudo dmsetup create ${dm_name0}_probe --table "0 ${SEC_NR} pcache ${cache_d
     exit 0
 fi
 sudo dmsetup remove ${dm_name0}_probe
+reset_pmem
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 
 echo "DEBUG: case 10 - data persistence after remove and recreate"

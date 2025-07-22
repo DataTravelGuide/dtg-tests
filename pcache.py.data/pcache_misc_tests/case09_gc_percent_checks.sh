@@ -10,6 +10,7 @@ if ! sudo dmsetup create ${dm_name0}_probe --table "0 ${SEC_NR} pcache ${cache_d
     exit 0
 fi
 sudo dmsetup remove ${dm_name0}_probe
+reset_pmem
 
 echo "DEBUG: case 9 - basic create and gc_percent message checks"
 sudo dmsetup create ${dm_name0} --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
