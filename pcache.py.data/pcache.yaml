@@ -4,6 +4,16 @@ cache_dev1: "/dev/pmem1"
 data_dev0: "/dev/ram0p1"
 data_dev1: "/dev/ram0p2"
 
+cache_mode: !mux
+  writeback:
+    cache_mode: "writeback"
+  writethrough:
+    cache_mode: "writethrough"
+  writearound:
+    cache_mode: "writearound"
+  writeonly:
+    cache_mode: "writeonly"
+
 gc: !mux
   gc0:
     gc_percent: "0"

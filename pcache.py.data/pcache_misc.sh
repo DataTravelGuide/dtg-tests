@@ -6,6 +6,7 @@ set -ex
 : "${data_crc:=false}"
 : "${gc_percent:=}"
 : "${data_dev0:?data_dev0 not set}"
+: "${cache_mode:=writeback}"
 
 dm_name0="pcache_$(basename ${data_dev0})"
 
@@ -18,7 +19,7 @@ reset_pmem() {
     sync
 }
 
-export linux_path cache_dev0 data_crc gc_percent data_dev0 dm_name0
+export linux_path cache_dev0 data_crc gc_percent data_dev0 cache_mode dm_name0
 export -f reset_pmem
 
 test_dir="$(dirname "$0")/pcache_misc_tests"
