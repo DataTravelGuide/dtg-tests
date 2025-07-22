@@ -7,8 +7,16 @@ reset_pmem
 
 if [[ "${cache_mode}" != "writearound" ]]; then
     echo "cache_mode is ${cache_mode}, skipping writearound test"
+
     exit 0
 fi
+SEC_NR=$(sudo blockdev --getsz ${data_dev0})
+if ! sudo dmsetup create ${dm_name0}_probe --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"; then
+    echo "cache_mode ${cache_mode} not supported, skipping"
+    exit 0
+fi
+sudo dmsetup remove ${dm_name0}_probe
+
 
 echo "DEBUG: case 17 - verify writearound mode behavior"
 
