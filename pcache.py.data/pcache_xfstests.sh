@@ -34,5 +34,5 @@ sudo mkdir -p "${TEST_MNT}" "${SCRATCH_MNT}"
 
 # Run a basic xfstests case
 cd /workspace/xfstests
-./check -g quick -g generic/rw -E ./exclude.exclude
+./check -g generic/rw -E ./exclude.exclude
 
