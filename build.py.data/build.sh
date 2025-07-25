@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 env
 cd ${kernel_dir}
 
