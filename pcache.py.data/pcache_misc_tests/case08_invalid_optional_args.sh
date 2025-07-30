@@ -1,5 +1,6 @@
 #!/bin/bash
 set -ex
+sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko 2>/dev/null || true
 : "${cache_mode:=writeback}"
