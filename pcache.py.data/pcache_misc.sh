@@ -14,6 +14,7 @@ dm_name0="pcache_$(basename ${data_dev0})"
 
 pmem_a=${cache_dev0}
 pmem_b=${cache_dev1}
+export pmem_a pmem_b
 
 if [[ "${striped}" == "true" ]]; then
     sudo dmsetup remove striped1 2>/dev/null || true
