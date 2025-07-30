@@ -9,6 +9,8 @@ class PcacheTest(Test):
         self.env_dict = {}
         for path, key, value in self.params.iteritems():
             self.env_dict[key] = value
+        self.striped = str(self.params.get('striped', default='false')).lower()
+        self.env_dict['striped'] = self.striped
         self.log.info("env_dict: %s", self.env_dict)
 
     def run_pcache_script(self):

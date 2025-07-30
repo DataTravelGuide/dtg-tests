@@ -1,6 +1,9 @@
 linux_path: "/workspace/linux_compile"
 cache_dev0: "/dev/pmem0"
 cache_dev1: "/dev/pmem1"
+cache_dev2: "/dev/pmem2"
+cache_dev3: "/dev/pmem3"
+striped: false
 data_dev0: "/dev/ram0p1"
 data_dev1: "/dev/ram0p2"
 
