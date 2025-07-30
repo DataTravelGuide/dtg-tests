@@ -27,9 +27,9 @@ fi
 sudo dmsetup remove "${dm_name0}_probe"
 
 DBG=/sys/kernel/debug/failslab
-PROB=50
-INTERVAL=10
-TIMES=100
+PROB=95
+INTERVAL=1
+TIMES=1000
 VERBOSE=1
 
 cleanup() {
@@ -53,15 +53,6 @@ sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_cache_key/failslab'
 sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
 
 # Run fio workload to trigger pcache slab allocations
-sudo fio \
-    --name=pcache_failslab \
-    --filename=/dev/mapper/"${dm_name0}" \
-    --rw=randread \
-    --bs=4k \
-    --numjobs=16 \
-    --iodepth=16 \
-    --direct=1 \
-    --size=1G \
-    --verify=md5
+fio --name=pcache_failslab --filename=/dev/mapper/pcache_ram0p1 --ioengine libaio --rw=randread --bs=4k --numjobs=16 --iodepth=16 --direct=1 --size=1G
 
 echo "==> Done. See dmesg for failslab traces."
