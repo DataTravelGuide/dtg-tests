@@ -10,6 +10,9 @@ set -euxo pipefail
 
 dm_name0="pcache_$(basename "${data_dev0}")"
 
+# Ensure any leftover device is cleaned up before reloading the module
+sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
+
 # Check whether the requested cache mode is supported. If not, skip the test
 sudo rmmod dm-pcache 2>/dev/null || true
 sudo insmod "${linux_path}/drivers/md/dm-pcache/dm-pcache.ko"
