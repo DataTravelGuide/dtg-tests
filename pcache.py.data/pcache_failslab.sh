@@ -52,8 +52,16 @@ bash ./pcache.py.data/pcache.sh
 sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_cache_key/failslab'
 sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
 
-cd /workspace/xfstests/
-# Run single xfstests case that triggers pcache creation
-sudo ./check generic/001
+# Run fio workload to trigger pcache slab allocations
+sudo fio \
+    --name=pcache_failslab \
+    --filename=/dev/mapper/"${dm_name0}" \
+    --rw=randread \
+    --bs=4k \
+    --numjobs=16 \
+    --iodepth=16 \
+    --direct=1 \
+    --size=1G \
+    --verify=md5
 
 echo "==> Done. See dmesg for failslab traces."
