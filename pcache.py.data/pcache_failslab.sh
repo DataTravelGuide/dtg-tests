@@ -9,9 +9,11 @@ set -euxo pipefail
 : "${data_crc:=false}"
 
 dm_name0="pcache_$(basename "${data_dev0}")"
+dm_name1="pcache_$(basename "${data_dev1}")"
 
 # Ensure any leftover device is cleaned up before reloading the module
 sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
+sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
 
 # Check whether the requested cache mode is supported. If not, skip the test
 sudo rmmod dm-pcache 2>/dev/null || true
