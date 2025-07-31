@@ -32,18 +32,33 @@ INTERVAL=1
 TIMES=1000
 VERBOSE=1
 
+configure_failslab() {
+    sudo sh -c "echo $PROB > $DBG/probability"
+    sudo sh -c "echo $INTERVAL > $DBG/interval"
+    sudo sh -c "echo $VERBOSE > $DBG/verbose"
+    sudo sh -c "echo Y > $DBG/cache-filter"
+    sudo sh -c "echo N > $DBG/ignore-gfp-wait"
+    sudo sh -c "echo $TIMES > $DBG/times"
+}
+
+reset_failslab() {
+    sudo sh -c "echo 0 > $DBG/probability"
+    sudo sh -c "echo 0 > $DBG/interval"
+    sudo sh -c "echo 0 > $DBG/verbose"
+    sudo sh -c "echo N > $DBG/cache-filter"
+    sudo sh -c "echo Y > $DBG/ignore-gfp-wait"
+    sudo sh -c "echo 0 > $DBG/times"
+    sudo sh -c 'echo 0 > /sys/kernel/slab/pcache_cache_key/failslab'
+    sudo sh -c 'echo 0 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
+}
+
 cleanup() {
     echo 0 > "$DBG/times" || true
 }
 trap cleanup EXIT
 
 # Configure failslab
-sudo sh -c "echo $PROB > $DBG/probability"
-sudo sh -c "echo $INTERVAL > $DBG/interval"
-sudo sh -c "echo $VERBOSE > $DBG/verbose"
-sudo sh -c "echo Y > $DBG/cache-filter"
-sudo sh -c "echo N > $DBG/ignore-gfp-wait"
-sudo sh -c "echo $TIMES > $DBG/times"
+configure_failslab
 
 # Prepare pcache devices
 bash ./pcache.py.data/pcache.sh
@@ -54,5 +69,13 @@ sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
 
 # Run fio workload to trigger pcache slab allocations
 fio --name=pcache_failslab --filename=/dev/mapper/pcache_ram0p1 --ioengine libaio --rw=randread --bs=4k --numjobs=16 --iodepth=16 --direct=1 --size=1G
+
+# Reset failslab parameters before running randwrite workload
+reset_failslab
+configure_failslab
+sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_cache_key/failslab'
+sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
+
+fio --name=pcache_failslab_write --filename=/dev/mapper/pcache_ram0p1 --ioengine libaio --rw=randwrite --bs=4k --numjobs=16 --iodepth=16 --direct=1 --size=1G
 
 echo "==> Done. See dmesg for failslab traces."
