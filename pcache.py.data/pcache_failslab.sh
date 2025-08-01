@@ -101,7 +101,7 @@ sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
 sudo sh -c 'echo "file cache_key.c +p" > /sys/kernel/debug/dynamic_debug/control'
 sudo sh -c 'echo "file cache_req.c +p" > /sys/kernel/debug/dynamic_debug/control'
 
-dd if=/dev/mapper/pcache_ram0p1 of=/dev/null bs=4M count=100 iflag=direct
+dd if=/dev/mapper/${dm_name0} of=/dev/null bs=4M count=100 iflag=direct
 
 reset_pmem
 bash ./pcache.py.data/pcache.sh
