@@ -47,7 +47,7 @@ sudo sh -c "echo 100 > /sys/kernel/debug/fail_make_request/times"
 sudo sh -c "echo 1 > /sys/kernel/debug/fail_make_request/verbose"
 MAKE_FAIL_PATH="/sys/block/$(basename ${data_dev0})/make-it-fail"
 if [[ ! -e ${MAKE_FAIL_PATH} ]]; then
-    parent=$(lsblk -no pkname ${data_dev0})
+    parent=$(lsblk -no pkname "${data_dev0}" | head -n 1)
     MAKE_FAIL_PATH="/sys/block/${parent}/$(basename ${data_dev0})/make-it-fail"
 fi
 sudo sh -c "echo 1 > ${MAKE_FAIL_PATH}"
