@@ -12,6 +12,12 @@ dm_name0="pcache_$(basename "${data_dev0}")"
 dm_name1="pcache_$(basename "${data_dev1}")"
 PATCH_FILE="$(realpath "$(dirname "$0")/0001-dm-pcache-set-min_nr-of-mempool-to-0.patch")"
 
+DBG=/sys/kernel/debug/failslab
+PROB=100
+INTERVAL=2
+TIMES=100
+VERBOSE=1
+
 apply_patch() {
     pushd "$linux_path"
     patch -Np1 < "$PATCH_FILE" || true
@@ -27,7 +33,10 @@ revert_patch() {
     popd
 }
 
-apply_patch
+cleanup() {
+    echo 0 > "$DBG/times" || true
+    revert_patch
+}
 
 
 # Clear existing dmesg output so only messages from this test are captured
@@ -48,12 +57,6 @@ if ! sudo dmsetup create "${dm_name0}_probe" --table "0 ${SEC_NR} pcache ${cache
     exit 0
 fi
 sudo dmsetup remove "${dm_name0}_probe"
-
-DBG=/sys/kernel/debug/failslab
-PROB=100
-INTERVAL=2
-TIMES=100
-VERBOSE=1
 
 reset_pmem() {
     dd if=/dev/zero of="${cache_dev0}" bs=1M count=1 oflag=direct
@@ -80,11 +83,9 @@ reset_failslab() {
     sudo sh -c 'echo 0 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
 }
 
-cleanup() {
-    echo 0 > "$DBG/times" || true
-    revert_patch
-}
 trap cleanup EXIT
+
+apply_patch
 
 # Configure failslab
 configure_failslab
