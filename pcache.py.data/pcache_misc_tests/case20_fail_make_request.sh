@@ -1,9 +1,21 @@
 #!/bin/bash
+: "${cache_mode:=writeback}"
 set -ex
+
+cleanup() {
+    if [[ -n "${MAKE_FAIL_PATH}" ]]; then
+        sudo sh -c "echo 0 > ${MAKE_FAIL_PATH}" 2>/dev/null || true
+    fi
+    sudo sh -c "echo 0 > /sys/kernel/debug/fail_make_request/times" 2>/dev/null || true
+    sudo sh -c "echo 0 > /sys/kernel/debug/fail_make_request/verbose" 2>/dev/null || true
+    sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
+    sudo rmmod dm-pcache 2>/dev/null || true
+}
+trap cleanup EXIT
+
 sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko 2>/dev/null || true
-: "${cache_mode:=writeback}"
 reset_pmem
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 if ! sudo dmsetup create ${dm_name0}_probe --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"; then
@@ -64,9 +76,3 @@ else
     fi
 fi
 
-sudo sh -c "echo 0 > ${MAKE_FAIL_PATH}"
-sudo sh -c "echo 0 > /sys/kernel/debug/fail_make_request/times"
-sudo sh -c "echo 0 > /sys/kernel/debug/fail_make_request/verbose"
-
-sudo dmsetup remove ${dm_name0} 2>/dev/null || true
-sudo rmmod dm-pcache 2>/dev/null || true
