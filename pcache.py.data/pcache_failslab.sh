@@ -28,9 +28,14 @@ sudo dmsetup remove "${dm_name0}_probe"
 
 DBG=/sys/kernel/debug/failslab
 PROB=95
-INTERVAL=1
-TIMES=1000
+INTERVAL=3
+TIMES=100
 VERBOSE=1
+
+reset_pmem() {
+    dd if=/dev/zero of="${cache_dev0}" bs=1M count=1 oflag=direct
+    sync
+}
 
 configure_failslab() {
     sudo sh -c "echo $PROB > $DBG/probability"
@@ -67,8 +72,17 @@ bash ./pcache.py.data/pcache.sh
 sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_cache_key/failslab'
 sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
 
+# Enable detailed pcache debug logging
+sudo sh -c 'echo "file cache_key.c +p" > /sys/kernel/debug/dynamic_debug/control'
+sudo sh -c 'echo "file cache_req.c +p" > /sys/kernel/debug/dynamic_debug/control'
+
 # Run fio workload to trigger pcache slab allocations
-fio --name=pcache_failslab --filename=/dev/mapper/pcache_ram0p1 --ioengine libaio --rw=randread --bs=4k --numjobs=16 --iodepth=16 --direct=1 --size=1G
+fio --name=pcache_failslab --filename=/dev/mapper/pcache_ram0p1 --ioengine libaio --rw=randread --bs=4k --numjobs=16 --iodepth=1 --direct=1 --size=100M
+
+reset_pmem
+bash ./pcache.py.data/pcache.sh
+reset_failslab
+fio --name=pcache_failslab --filename=/dev/mapper/pcache_ram0p1 --ioengine libaio --rw=randread --bs=4M --numjobs=1 --iodepth=16 --direct=1
 
 # Reset failslab parameters before running randwrite workload
 reset_failslab
@@ -76,6 +90,6 @@ configure_failslab
 sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_cache_key/failslab'
 sudo sh -c 'echo 1 > /sys/kernel/slab/pcache_backing_dev_req/failslab'
 
-fio --name=pcache_failslab_write --filename=/dev/mapper/pcache_ram0p1 --ioengine libaio --rw=randwrite --bs=4k --numjobs=16 --iodepth=16 --direct=1 --size=1G
+fio --name=pcache_failslab_write --filename=/dev/mapper/pcache_ram0p1 --ioengine libaio --rw=randwrite --bs=4k --numjobs=64 --iodepth=1 --direct=1 --size=10M
 
 echo "==> Done. See dmesg for failslab traces."
