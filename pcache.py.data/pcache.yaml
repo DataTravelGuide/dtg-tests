@@ -30,11 +30,13 @@ crc: !mux
     data_crc: "false"
 
 test_script: !mux
-    default:
-      test_script: "./pcache.py.data/pcache.sh"
-    xfstests:
-      test_script: "./pcache.py.data/pcache_xfstests.sh"
-    misc:
-      test_script: "./pcache.py.data/pcache_misc.sh"
-    failslab:
-      test_script: "./pcache.py.data/pcache_failslab.sh"
+  default:
+    test_script: "./pcache.py.data/pcache.sh"
+  xfstests:
+    test_script: "./pcache.py.data/pcache_xfstests.sh"
+  misc:
+    test_script: "./pcache.py.data/pcache_misc.sh"
+  failslab:
+    test_script: "./pcache.py.data/pcache_failslab.sh"
+  fail_make_request:
+    test_script: "./pcache.py.data/pcache_fail_make_request.sh"
