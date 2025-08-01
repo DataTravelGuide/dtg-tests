@@ -10,7 +10,7 @@ set -euxo pipefail
 
 dm_name0="pcache_$(basename "${data_dev0}")"
 dm_name1="pcache_$(basename "${data_dev1}")"
-PATCH_FILE="$(dirname "$0")/0001-dm-pcache-set-min_nr-of-mempool-to-0.patch"
+PATCH_FILE="$(realpath "$(dirname "$0")/0001-dm-pcache-set-min_nr-of-mempool-to-0.patch")"
 
 apply_patch() {
     pushd "$linux_path"
