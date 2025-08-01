@@ -45,11 +45,15 @@ sudo sh -c "echo 2 > /sys/kernel/debug/fail_make_request/interval"
 sudo sh -c "echo 50 > /sys/kernel/debug/fail_make_request/probability"
 sudo sh -c "echo 100 > /sys/kernel/debug/fail_make_request/times"
 sudo sh -c "echo 1 > /sys/kernel/debug/fail_make_request/verbose"
-MAKE_FAIL_PATH="/sys/block/$(basename "${data_dev0}")/make-it-fail"
+MAJ_MIN=$(lsblk -d -no MAJ:MIN "${data_dev0}" | tr -d '[:space:]')
+MAKE_FAIL_PATH="/sys/dev/block/${MAJ_MIN}/make-it-fail"
 if [[ ! -e "${MAKE_FAIL_PATH}" ]]; then
-    parent=$(lsblk -no pkname "${data_dev0}" | head -n 1 | tr -d '[:space:]')
-    if [[ -n "${parent}" ]]; then
-        MAKE_FAIL_PATH="/sys/block/${parent}/$(basename "${data_dev0}")/make-it-fail"
+    MAKE_FAIL_PATH="/sys/block/$(basename "${data_dev0}")/make-it-fail"
+    if [[ ! -e "${MAKE_FAIL_PATH}" ]]; then
+        parent=$(lsblk -no pkname "${data_dev0}" | head -n 1 | tr -d '[:space:]')
+        if [[ -n "${parent}" ]]; then
+            MAKE_FAIL_PATH="/sys/block/${parent}/$(basename "${data_dev0}")/make-it-fail"
+        fi
     fi
 fi
 sudo sh -c "echo 1 > ${MAKE_FAIL_PATH}"
