@@ -11,6 +11,10 @@ set -euxo pipefail
 dm_name0="pcache_$(basename "${data_dev0}")"
 dm_name1="pcache_$(basename "${data_dev1}")"
 
+# Clear existing dmesg output so only messages from this test are captured
+DMESG_LOG=/tmp/pcache_failslab_dmesg.log
+sudo dmesg -c > "$DMESG_LOG" || true
+
 # Ensure any leftover device is cleaned up before reloading the module
 sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
 sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
@@ -92,5 +96,15 @@ sudo sh -c 'echo "file cache_req.c +p" > /sys/kernel/debug/dynamic_debug/control
 
 cd /workspace/xfstests
 ./check generic/001
+
+sudo dmesg > "$DMESG_LOG"
+if ! grep -q "allocate pre_alloc_key with GFP_NOIO" "$DMESG_LOG"; then
+    echo "Error: allocate pre_alloc_key with GFP_NOIO not found in dmesg"
+    exit 1
+fi
+if ! grep -q "allocate pre_alloc_req with GFP_NOIO" "$DMESG_LOG"; then
+    echo "Error: allocate pre_alloc_req with GFP_NOIO not found in dmesg"
+    exit 1
+fi
 
 echo "==> Done. See dmesg for failslab traces."
