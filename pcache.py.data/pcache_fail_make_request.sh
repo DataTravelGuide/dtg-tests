@@ -22,6 +22,9 @@ cleanup() {
     sudo sh -c "echo 0 > /sys/kernel/debug/fail_make_request/verbose" 2>/dev/null || true
     sudo dmsetup remove "${DM_NAME}" 2>/dev/null || true
     sudo rmmod dm-pcache 2>/dev/null || true
+
+    [[ -n "${TMP_IN}" && -f "${TMP_IN}" ]] && rm -f "${TMP_IN}"
+    [[ -n "${TMP_OUT}" && -f "${TMP_OUT}" ]] && rm -f "${TMP_OUT}"
 }
 trap cleanup EXIT
 
@@ -59,7 +62,7 @@ fi
 sudo sh -c "echo 1 > ${MAKE_FAIL_PATH}"
 
 # read should fail
-if dd if=/dev/mapper/"${DM_NAME}" of=/dev/null bs=4k count=1 iflag=direct; then
+if dd if=/dev/mapper/"${DM_NAME}" of=/dev/null bs=1M count=100 iflag=direct; then
     echo "read succeeded when fail_make_request is enabled"
     exit 1
 fi
@@ -69,11 +72,23 @@ if [[ "${cache_mode}" == "writeback" || "${cache_mode}" == "writeonly" ]]; then
     expect_write_success=true
 fi
 
-if dd if=/dev/zero of=/dev/mapper/"${DM_NAME}" bs=4k count=1 oflag=direct; then
+TMP_IN=$(mktemp)
+dd if=/dev/urandom of="${TMP_IN}" bs=1M count=100
+
+if dd if="${TMP_IN}" of=/dev/mapper/"${DM_NAME}" bs=1M count=100 oflag=direct; then
     [[ "${expect_write_success}" == true ]] || {
         echo "write unexpectedly succeeded for cache_mode ${cache_mode}"
         exit 1
     }
+
+    TMP_OUT=$(mktemp)
+    dd if=/dev/mapper/"${DM_NAME}" of="${TMP_OUT}" bs=1M count=100 iflag=direct
+    orig_md5=$(md5sum "${TMP_IN}" | awk '{print $1}')
+    new_md5=$(md5sum "${TMP_OUT}" | awk '{print $1}')
+    if [[ "${orig_md5}" != "${new_md5}" ]]; then
+        echo "md5 mismatch between written and read data"
+        exit 1
+    fi
 else
     [[ "${expect_write_success}" != true ]] || {
         echo "write unexpectedly failed for cache_mode ${cache_mode}"
