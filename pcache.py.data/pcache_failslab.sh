@@ -10,6 +10,25 @@ set -euxo pipefail
 
 dm_name0="pcache_$(basename "${data_dev0}")"
 dm_name1="pcache_$(basename "${data_dev1}")"
+PATCH_FILE="$(dirname "$0")/0001-dm-pcache-set-min_nr-of-mempool-to-0.patch"
+
+apply_patch() {
+    pushd "$linux_path"
+    patch -Np1 < "$PATCH_FILE" || true
+    make M=drivers/md/dm-pcache/
+    popd
+}
+
+revert_patch() {
+    pushd "$linux_path"
+    patch -Rp1 < "$PATCH_FILE" || true
+    make M=drivers/md/dm-pcache/ clean
+    make M=drivers/md/dm-pcache/
+    popd
+}
+
+apply_patch
+
 
 # Clear existing dmesg output so only messages from this test are captured
 DMESG_LOG=/tmp/pcache_failslab_dmesg.log
@@ -63,6 +82,7 @@ reset_failslab() {
 
 cleanup() {
     echo 0 > "$DBG/times" || true
+    revert_patch
 }
 trap cleanup EXIT
 

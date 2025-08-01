@@ -1,0 +1,43 @@
+From f3db7858251c7d13c8ec597f881fbd09f7eec555 Mon Sep 17 00:00:00 2001
+From: Dongsheng Yang <dongsheng.yang@linux.dev>
+Date: Fri, 1 Aug 2025 03:11:22 +0000
+Subject: [PATCH] dm-pcache: set min_nr of mempool to 0
+
+Signed-off-by: Dongsheng Yang <dongsheng.yang@linux.dev>
+---
+ drivers/md/dm-pcache/backing_dev.c | 4 ++--
+ drivers/md/dm-pcache/cache_key.c   | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+diff --git a/drivers/md/dm-pcache/backing_dev.c b/drivers/md/dm-pcache/backing_dev.c
+index 11ac60c00013..730e50890200 100644
+--- a/drivers/md/dm-pcache/backing_dev.c
++++ b/drivers/md/dm-pcache/backing_dev.c
+@@ -24,11 +24,11 @@ static int backing_dev_init(struct dm_pcache *pcache)
+        struct pcache_backing_dev *backing_dev = &pcache->backing_dev;
+        int ret;
+
+-       ret = mempool_init_slab_pool(&backing_dev->req_pool, 128, backing_req_cache);
++       ret = mempool_init_slab_pool(&backing_dev->req_pool, 0, backing_req_cache);
+        if (ret)
+                goto err;
+
+-       ret = mempool_init_slab_pool(&backing_dev->bvec_pool, 128, backing_bvec_cache);
++       ret = mempool_init_slab_pool(&backing_dev->bvec_pool, 0, backing_bvec_cache);
+        if (ret)
+                goto req_pool_exit;
+
+diff --git a/drivers/md/dm-pcache/cache_key.c b/drivers/md/dm-pcache/cache_key.c
+index 2b77e121f89b..a1b68e2684bc 100644
+--- a/drivers/md/dm-pcache/cache_key.c
++++ b/drivers/md/dm-pcache/cache_key.c
+@@ -828,7 +828,7 @@ int cache_tree_init(struct pcache_cache *cache, struct pcache_cache_tree *cache_t
+        cache_tree->cache = cache;
+        cache_tree->n_subtrees = n_subtrees;
+
+-       ret = mempool_init_slab_pool(&cache_tree->key_pool, 1024, key_cache);
++       ret = mempool_init_slab_pool(&cache_tree->key_pool, 0, key_cache);
+        if (ret)
+                goto err;
+
+-- 
+2.43.0
