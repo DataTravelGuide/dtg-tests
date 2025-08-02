@@ -8,9 +8,11 @@ set -ex
 : "${data_crc:=false}"
 : "${gc_percent:=}"
 : "${data_dev0:?data_dev0 not set}"
+: "${data_dev1:?data_dev1 not set}"
 : "${cache_mode:=writeback}"
 
 dm_name0="pcache_$(basename ${data_dev0})"
+dm_name1="pcache_$(basename ${data_dev1})"
 
 pmem_a=${cache_dev0}
 pmem_b=${cache_dev1}
@@ -25,6 +27,7 @@ if [[ "${striped}" == "true" ]]; then
 fi
 
 sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
+sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
 sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 if [[ "${striped}" == "true" ]]; then
@@ -50,7 +53,7 @@ reset_pmem() {
     sync
 }
 
-export linux_path cache_dev0 data_crc gc_percent data_dev0 cache_mode dm_name0
+export linux_path cache_dev0 data_crc gc_percent data_dev0 data_dev1 cache_mode dm_name0 dm_name1
 export -f reset_pmem
 
 test_dir="$(dirname "$0")/pcache_misc_tests"
@@ -62,4 +65,5 @@ for tc in "$test_dir"/*.sh; do
 done
 
 sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
+sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
