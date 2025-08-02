@@ -26,8 +26,8 @@ cleanup() {
     sudo dmsetup remove "${DM_NAME1}" 2>/dev/null || true
     sudo rmmod dm-pcache 2>/dev/null || true
 
-    [[ -n "${TMP_IN}" && -f "${TMP_IN}" ]] && rm -f "${TMP_IN}"
-    [[ -n "${TMP_OUT}" && -f "${TMP_OUT}" ]] && rm -f "${TMP_OUT}"
+    [[ -n "${TMP_IN}" && -f "${TMP_IN}" ]] && rm -f "${TMP_IN}" || true
+    [[ -n "${TMP_OUT}" && -f "${TMP_OUT}" ]] && rm -f "${TMP_OUT}" || true
 }
 trap cleanup EXIT
 

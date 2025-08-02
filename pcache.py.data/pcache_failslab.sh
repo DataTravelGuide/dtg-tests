@@ -39,7 +39,7 @@ cleanup() {
     sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
     sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
     sudo rmmod dm-pcache 2>/dev/null || true
-    revert_patch
+    revert_patch || true
 }
 
 
