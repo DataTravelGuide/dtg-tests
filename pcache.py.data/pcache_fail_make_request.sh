@@ -4,10 +4,12 @@ set -ex
 : "${linux_path:=/workspace/linux_compile}"
 : "${cache_dev0:=/dev/pmem0}"
 : "${data_dev0:?data_dev0 not set}"
+: "${data_dev1:?data_dev1 not set}"
 : "${cache_mode:=writeback}"
 : "${data_crc:=false}"
 
 DM_NAME="pcache_$(basename "${data_dev0}")"
+DM_NAME1="pcache_$(basename "${data_dev1}")"
 
 reset_pmem() {
     dd if=/dev/zero of="${cache_dev0}" bs=1M count=1 oflag=direct
@@ -21,14 +23,16 @@ cleanup() {
     sudo sh -c "echo 0 > /sys/kernel/debug/fail_make_request/times" 2>/dev/null || true
     sudo sh -c "echo 0 > /sys/kernel/debug/fail_make_request/verbose" 2>/dev/null || true
     sudo dmsetup remove "${DM_NAME}" 2>/dev/null || true
+    sudo dmsetup remove "${DM_NAME1}" 2>/dev/null || true
     sudo rmmod dm-pcache 2>/dev/null || true
 
-    [[ -n "${TMP_IN}" && -f "${TMP_IN}" ]] && rm -f "${TMP_IN}"
-    [[ -n "${TMP_OUT}" && -f "${TMP_OUT}" ]] && rm -f "${TMP_OUT}"
+    [[ -n "${TMP_IN}" && -f "${TMP_IN}" ]] && rm -f "${TMP_IN}" || true
+    [[ -n "${TMP_OUT}" && -f "${TMP_OUT}" ]] && rm -f "${TMP_OUT}" || true
 }
 trap cleanup EXIT
 
 sudo dmsetup remove "${DM_NAME}" 2>/dev/null || true
+sudo dmsetup remove "${DM_NAME1}" 2>/dev/null || true
 sudo rmmod dm-pcache 2>/dev/null || true
 sudo insmod "${linux_path}"/drivers/md/dm-pcache/dm-pcache.ko
 reset_pmem

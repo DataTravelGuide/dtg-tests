@@ -5,6 +5,7 @@ set -euxo pipefail
 : "${linux_path:=/workspace/linux_compile}"
 : "${cache_dev0:=/dev/pmem0}"
 : "${data_dev0:?data_dev0 not set}"
+: "${data_dev1:?data_dev1 not set}"
 : "${cache_mode:=writeback}"
 : "${data_crc:=false}"
 
@@ -35,7 +36,10 @@ revert_patch() {
 
 cleanup() {
     echo 0 > "$DBG/times" || true
-    revert_patch
+    sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
+    sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
+    sudo rmmod dm-pcache 2>/dev/null || true
+    revert_patch || true
 }
 
 
