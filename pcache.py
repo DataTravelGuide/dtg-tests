@@ -21,11 +21,11 @@ class PcacheTest(Test):
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
         print(result.stdout)
+        print(result.stderr)
 
         if result.returncode == 0:
             self.log.info("pcache script completed successfully")
         else:
-            self.log.error("pcache script failed: %s", result.stderr)
             self.fail(result)
 
     def test(self):
