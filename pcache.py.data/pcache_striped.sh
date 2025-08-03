@@ -1,6 +1,30 @@
 #!/bin/bash
 set -ex
 
+: "${covdir:=/workspace/datatravelguide/covdir}"
+
+dump_gcov() {
+    ts=$(date +%s)
+    mkdir -p "$covdir"
+    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcda" -exec sh -c 'for f; do dest="$covdir/${f#/}.$ts"; mkdir -p "$(dirname "$dest")"; sudo cp "$f" "$dest"; done' sh {} +
+    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcno" -exec sh -c 'for f; do dest="$covdir/${f#/}.$ts"; mkdir -p "$(dirname "$dest")"; sudo cp "$f" "$dest"; done' sh {} +
+}
+
+pcache_rmmod() {
+    dump_gcov
+    sudo rmmod dm-pcache 2>/dev/null || true
+}
+
+reset_gcov() {
+    echo 1 | sudo tee /sys/kernel/debug/gcov/reset >/dev/null
+}
+
+pcache_insmod() {
+    reset_gcov
+    sudo insmod "$1"
+}
+
+
 : "${linux_path:=/workspace/linux_compile}"
 : "${cache_dev0:=/dev/pmem0}"
 : "${cache_dev1:=/dev/pmem1}"
@@ -21,9 +45,9 @@ sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
 sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
 sudo dmsetup remove "${stripe0}" 2>/dev/null || true
 sudo dmsetup remove "${stripe1}" 2>/dev/null || true
-sudo rmmod dm-pcache 2>/dev/null || true
+pcache_rmmod
 
-sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
+pcache_insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 
 sudo dd if=/dev/zero of=${cache_dev0} bs=1M count=16 oflag=direct
 sudo dd if=/dev/zero of=${cache_dev1} bs=1M count=16 oflag=direct

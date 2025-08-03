@@ -1,6 +1,30 @@
 #!/bin/bash
 set -ex
 
+: "${covdir:=/workspace/datatravelguide/covdir}"
+
+dump_gcov() {
+    ts=$(date +%s)
+    mkdir -p "$covdir"
+    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcda" -exec sh -c 'for f; do dest="$covdir/${f#/}.$ts"; mkdir -p "$(dirname "$dest")"; sudo cp "$f" "$dest"; done' sh {} +
+    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcno" -exec sh -c 'for f; do dest="$covdir/${f#/}.$ts"; mkdir -p "$(dirname "$dest")"; sudo cp "$f" "$dest"; done' sh {} +
+}
+
+pcache_rmmod() {
+    dump_gcov
+    sudo rmmod dm-pcache 2>/dev/null || true
+}
+
+reset_gcov() {
+    echo 1 | sudo tee /sys/kernel/debug/gcov/reset >/dev/null
+}
+
+pcache_insmod() {
+    reset_gcov
+    sudo insmod "$1"
+}
+
+
 : "${linux_path:=/workspace/linux_compile}"
 : "${cache_dev0:=/dev/pmem0}"
 : "${data_dev0:?data_dev0 not set}"
@@ -24,7 +48,7 @@ cleanup() {
     sudo sh -c "echo 0 > /sys/kernel/debug/fail_make_request/verbose" 2>/dev/null || true
     sudo dmsetup remove "${DM_NAME}" 2>/dev/null || true
     sudo dmsetup remove "${DM_NAME1}" 2>/dev/null || true
-    sudo rmmod dm-pcache 2>/dev/null || true
+    pcache_rmmod
 
     [[ -n "${TMP_IN}" && -f "${TMP_IN}" ]] && rm -f "${TMP_IN}" || true
     [[ -n "${TMP_OUT}" && -f "${TMP_OUT}" ]] && rm -f "${TMP_OUT}" || true
@@ -33,8 +57,8 @@ trap cleanup EXIT
 
 sudo dmsetup remove "${DM_NAME}" 2>/dev/null || true
 sudo dmsetup remove "${DM_NAME1}" 2>/dev/null || true
-sudo rmmod dm-pcache 2>/dev/null || true
-sudo insmod "${linux_path}"/drivers/md/dm-pcache/dm-pcache.ko
+pcache_rmmod
+pcache_insmod "${linux_path}"/drivers/md/dm-pcache/dm-pcache.ko
 reset_pmem
 SEC_NR=$(sudo blockdev --getsz "${data_dev0}")
 if ! sudo dmsetup create "${DM_NAME}"_probe --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"; then

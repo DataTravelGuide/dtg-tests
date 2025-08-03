@@ -1,9 +1,33 @@
 #!/bin/bash
 set -ex
+
+: "${covdir:=/workspace/datatravelguide/covdir}"
+
+dump_gcov() {
+    ts=$(date +%s)
+    mkdir -p "$covdir"
+    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcda" -exec sh -c 'for f; do dest="$covdir/${f#/}.$ts"; mkdir -p "$(dirname "$dest")"; sudo cp "$f" "$dest"; done' sh {} +
+    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcno" -exec sh -c 'for f; do dest="$covdir/${f#/}.$ts"; mkdir -p "$(dirname "$dest")"; sudo cp "$f" "$dest"; done' sh {} +
+}
+
+pcache_rmmod() {
+    dump_gcov
+    sudo rmmod dm-pcache 2>/dev/null || true
+}
+
+reset_gcov() {
+    echo 1 | sudo tee /sys/kernel/debug/gcov/reset >/dev/null
+}
+
+pcache_insmod() {
+    reset_gcov
+    sudo insmod "$1"
+}
+
 sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
 sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
-sudo rmmod dm-pcache 2>/dev/null || true
-sudo insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko 2>/dev/null || true
+pcache_rmmod
+pcache_insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 : "${cache_mode:=writeback}"
 reset_pmem
 
@@ -54,4 +78,4 @@ fi
 sudo umount /mnt/pcache
 
 sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
-sudo rmmod dm-pcache 2>/dev/null || true
+pcache_rmmod
