@@ -10,6 +10,7 @@ dump_gcov() {
     mkdir -p "$covdir"
     sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcda" -exec sh -c 'cp "$1" "$2/$3_$(basename "$1")"' _ {} "$covdir" "$ts" \;
     sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcno" -exec sh -c 'cp "$1" "$2/$3_$(basename "$1")"' _ {} "$covdir" "$ts" \;
+    reset_gcov
 }
 
 
@@ -75,3 +76,6 @@ if [[ -n "${gc_percent}" ]]; then
 fi
 
 sudo mkfs.xfs -f /dev/mapper/${dm_name0}
+sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
+sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
+pcache_rmmod
