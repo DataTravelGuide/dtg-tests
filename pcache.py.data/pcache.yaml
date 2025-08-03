@@ -1,5 +1,6 @@
 linux_path: "/workspace/linux_compile"
 covdir: "/workspace/datatravelguide/covdir"
+gcov: false
 cache_dev0: "/dev/pmem0"
 cache_dev1: "/dev/pmem1"
 cache_dev2: "/dev/pmem2"

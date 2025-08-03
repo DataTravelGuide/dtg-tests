@@ -2,8 +2,10 @@
 set -euxo pipefail
 
 : "${covdir:=/workspace/datatravelguide/covdir}"
+: "${gcov:=false}"
 
 dump_gcov() {
+    [[ "$gcov" != "true" ]] && return
     ts=$(date +%s)
     mkdir -p "$covdir"
     sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcda" -exec sh -c 'cp "$1" "$2/$3_$(basename "$1")"' _ {} "$covdir" "$ts" \;
@@ -17,6 +19,7 @@ pcache_rmmod() {
 }
 
 reset_gcov() {
+    [[ "$gcov" != "true" ]] && return
     echo 1 | sudo tee /sys/kernel/debug/gcov/reset >/dev/null
 }
 
