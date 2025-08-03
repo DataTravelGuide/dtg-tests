@@ -11,6 +11,8 @@ class PcacheTest(Test):
             self.env_dict[key] = value
         self.striped = str(self.params.get('striped', default='false')).lower()
         self.env_dict['striped'] = self.striped
+        self.gcov = str(self.params.get('gcov', default='false')).lower()
+        self.env_dict['gcov'] = self.gcov
         self.log.info("env_dict: %s", self.env_dict)
 
     def run_pcache_script(self):
