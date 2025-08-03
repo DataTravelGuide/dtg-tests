@@ -6,9 +6,10 @@ set -ex
 dump_gcov() {
     ts=$(date +%s)
     mkdir -p "$covdir"
-    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcda" -exec sh -c 'for f; do dest="$covdir/${f#/}.$ts"; mkdir -p "$(dirname "$dest")"; sudo cp "$f" "$dest"; done' sh {} +
-    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcno" -exec sh -c 'for f; do dest="$covdir/${f#/}.$ts"; mkdir -p "$(dirname "$dest")"; sudo cp "$f" "$dest"; done' sh {} +
+    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcda" -exec sh -c 'cp "$1" "$2/$(basename "$1").$3"' _ {} "$covdir" "$ts" \;
+    sudo find /sys/kernel/debug/gcov -path "*dm-pcache*gcno" -exec sh -c 'cp "$1" "$2/$(basename "$1").$3"' _ {} "$covdir" "$ts" \;
 }
+
 
 pcache_rmmod() {
     dump_gcov
