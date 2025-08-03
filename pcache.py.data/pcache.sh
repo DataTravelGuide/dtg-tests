@@ -76,6 +76,3 @@ if [[ -n "${gc_percent}" ]]; then
 fi
 
 sudo mkfs.xfs -f /dev/mapper/${dm_name0}
-sudo dmsetup remove "${dm_name0}" 2>/dev/null || true
-sudo dmsetup remove "${dm_name1}" 2>/dev/null || true
-pcache_rmmod
