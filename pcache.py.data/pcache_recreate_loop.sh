@@ -44,14 +44,29 @@ pcache_insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 dd if=/dev/zero of=${cache_dev0} bs=1M count=1 oflag=direct
 
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
+dmesg_line=$(sudo dmesg | wc -l)
 for i in $(seq 1 ${iterations}); do
     sudo dmsetup create "${dm_name}" --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
-    fio --name=pcache_stress --filename=/dev/mapper/${dm_name} --ioengine=libaio --direct=1 --bs=4k --rw=write --runtime=10 --time_based=1 --iodepth=16 --numjobs=1 --group_reporting
-    sudo dmsetup remove "${dm_name}"
+    fio --name=pcache_stress --filename=/dev/mapper/${dm_name} --ioengine=libaio --direct=1 --bs=4k --rw=randrw --runtime=10 --time_based=1 --iodepth=64 --numjobs=4 --group_reporting &
+    sleep 5
+    sudo dmsetup remove "${dm_name}" --force || true
+    sudo dmsetup remove "${dm_name}" --force || true
     sync
+    new_dmesg_line=$(sudo dmesg | wc -l)
+    if sudo dmesg | tail -n $((new_dmesg_line - dmesg_line)) | grep -Ei "Call Trace|BUG|WARNING"; then
+        echo "Kernel log contains call trace or warnings" >&2
+        exit 1
+    fi
+    dmesg_line=$new_dmesg_line
     echo "Completed iteration $i" | sudo tee /dev/kmsg
+    dmesg_line=$((dmesg_line + 1))
     sleep 1
 
 done
 
 pcache_rmmod
+new_dmesg_line=$(sudo dmesg | wc -l)
+if sudo dmesg | tail -n $((new_dmesg_line - dmesg_line)) | grep -Ei "Call Trace|BUG|WARNING"; then
+    echo "Kernel log contains call trace or warnings after rmmod" >&2
+    exit 1
+fi
