@@ -33,7 +33,7 @@ pcache_insmod() {
 : "${data_dev0:?data_dev0 not set}"
 : "${cache_mode:=writeback}"
 : "${data_crc:=false}"
-: "${iterations:=50}"
+: "${iterations:=10}"
 
 dm_name="pcache_$(basename ${data_dev0})"
 
