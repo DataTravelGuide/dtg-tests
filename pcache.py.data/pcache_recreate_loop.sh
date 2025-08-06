@@ -52,12 +52,14 @@ sudo dmsetup remove "${dm_name}_probe"
 
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 sudo dmsetup create data_delay --table \
-    "0 ${SEC_NR} delay ${data_dev0} 0 0 ${data_dev0} 0 5000"
+    "0 ${SEC_NR} delay ${data_dev0} 0 0 ${data_dev0} 0 500"
 data_dev0="/dev/mapper/data_delay"
 dmesg_line=$(sudo dmesg | wc -l)
 for i in $(seq 1 ${iterations}); do
     sudo dmsetup create "${dm_name}" --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
-    fio --name=pcache_stress --filename=/dev/mapper/${dm_name} --ioengine=libaio --direct=1 --bs=4k --rw=randrw --runtime=10 --time_based=1 --iodepth=64 --numjobs=4 --group_reporting &
+    fio --name=pcache_stress --filename=/dev/mapper/${dm_name} --ioengine=libaio --direct=1 --bs=128k --rw=randread --runtime=10 --time_based=1 --iodepth=64 --numjobs=4 --group_reporting &
+    fio --name=pcache_stress --filename=/dev/mapper/${dm_name} --ioengine=libaio --direct=1 --bs=4k --rw=randwrite --runtime=10 --time_based=1 --iodepth=64 --numjobs=2 --group_reporting &
+    fio --name=pcache_stress --filename=/dev/mapper/${dm_name} --ioengine=libaio --direct=1 --bs=256k --rw=randwrite --runtime=10 --time_based=1 --iodepth=64 --numjobs=2 --group_reporting &
     sleep 5
     sudo dmsetup remove "${dm_name}" --force || true
     sudo dmsetup remove "${dm_name}" --force || true
