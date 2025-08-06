@@ -1,3 +1,4 @@
+---
 linux_path: "/workspace/linux_compile"
 covdir: "/workspace/datatravelguide/covdir"
 gcov: false
@@ -42,3 +43,5 @@ test_script: !mux
     test_script: "./pcache.py.data/pcache_failslab.sh"
   fail_make_request:
     test_script: "./pcache.py.data/pcache_fail_make_request.sh"
+  recreate_loop:
+    test_script: "./pcache.py.data/pcache_recreate_loop.sh"
