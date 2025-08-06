@@ -44,6 +44,13 @@ pcache_insmod ${linux_path}/drivers/md/dm-pcache/dm-pcache.ko
 dd if=/dev/zero of=${cache_dev0} bs=1M count=1 oflag=direct
 
 SEC_NR=$(sudo blockdev --getsz ${data_dev0})
+if ! sudo dmsetup create "${dm_name}_probe" --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"; then
+    echo "cache_mode ${cache_mode} not supported, skipping"
+    exit 0
+fi
+sudo dmsetup remove "${dm_name}_probe"
+
+SEC_NR=$(sudo blockdev --getsz ${data_dev0})
 dmesg_line=$(sudo dmesg | wc -l)
 for i in $(seq 1 ${iterations}); do
     sudo dmsetup create "${dm_name}" --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
