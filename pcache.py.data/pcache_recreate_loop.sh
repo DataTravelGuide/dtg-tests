@@ -50,10 +50,6 @@ if ! sudo dmsetup create "${dm_name}_probe" --table "0 ${SEC_NR} pcache ${cache_
 fi
 sudo dmsetup remove "${dm_name}_probe"
 
-SEC_NR=$(sudo blockdev --getsz ${data_dev0})
-sudo dmsetup create data_delay --table \
-    "0 ${SEC_NR} delay ${data_dev0} 0 0 ${data_dev0} 0 500"
-data_dev0="/dev/mapper/data_delay"
 dmesg_line=$(sudo dmesg | wc -l)
 for i in $(seq 1 ${iterations}); do
     sudo dmsetup create "${dm_name}" --table "0 ${SEC_NR} pcache ${cache_dev0} ${data_dev0} 4 cache_mode ${cache_mode} data_crc ${data_crc}"
@@ -75,8 +71,6 @@ for i in $(seq 1 ${iterations}); do
     sleep 1
 
 done
-
-sudo dmsetup remove data_delay
 
 pcache_rmmod
 new_dmesg_line=$(sudo dmesg | wc -l)
