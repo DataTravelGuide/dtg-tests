@@ -45,3 +45,5 @@ test_script: !mux
     test_script: "./pcache.py.data/pcache_fail_make_request.sh"
   recreate_loop:
     test_script: "./pcache.py.data/pcache_recreate_loop.sh"
+  build:
+    test_script: "./pcache.py.data/pcache_build.sh"
