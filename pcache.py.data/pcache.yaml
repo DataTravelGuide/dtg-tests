@@ -45,3 +45,8 @@ test_script: !mux
     test_script: "./pcache.py.data/pcache_fail_make_request.sh"
   recreate_loop:
     test_script: "./pcache.py.data/pcache_recreate_loop.sh"
+  build:
+    !filter-only : /run/cache_mode/writeback
+    !filter-only : /run/gc/gc0
+    !filter-only : /run/crc/disable
+    test_script: "./pcache.py.data/pcache_build.sh"
