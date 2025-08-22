@@ -1,5 +1,6 @@
 ---
 linux_path: "/workspace/linux_compile"
+kernel_dir_32: "/workspace_data/linux_compile_32/"
 covdir: "/workspace/datatravelguide/covdir"
 gcov: false
 cache_dev0: "/dev/pmem0"
