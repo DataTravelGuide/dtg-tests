@@ -2,7 +2,7 @@
 set -ex
 
 : "${linux_path:=/workspace/linux_compile}"
-: "${kernel_dir_32:=/workspace_data/linux_compile_32/}"
+: "${kernel_dir_32:=/vdc/linux_compile_32/}"
 
 pushd "$linux_path"
 cleanup() {
