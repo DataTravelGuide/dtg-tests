@@ -6,7 +6,7 @@ set -ex
 cd "${linux_path}"
 
 need_pop=0
-if [ -n "$(git status --porcelain)" ]; then
+if ! git diff --quiet || ! git diff --cached --quiet; then
     git stash -q
     need_pop=1
 fi
