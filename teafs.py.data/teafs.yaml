@@ -1,6 +1,7 @@
 ---
 teafs_path: "/workspace/teafs"
 linux_path: "/workspace/linux_compile"
+smatch: "/workspace/smatch/smatch -p=kernel --full-path"
 
 test_script: !mux
   build:

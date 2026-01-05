@@ -11,4 +11,12 @@ cleanup() {
 trap cleanup EXIT
 
 make clean
-make
+
+if [ -n "$smatch" ]; then
+    make C=2 CHECK="/workspace/smatch/smatch -p=kernel --full-path" -j 32 2>&1 | tee smatch.out
+    grep -Ei 'warn|error' smatch.out && exit 1
+else
+    make
+fi
+
+echo "OK"
