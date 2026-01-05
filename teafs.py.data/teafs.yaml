@@ -1,0 +1,7 @@
+---
+teafs_path: "/workspace/teafs"
+linux_path: "/workspace/linux_compile"
+
+test_script: !mux
+  build:
+    test_script: "./teafs.py.data/teafs_build.sh"

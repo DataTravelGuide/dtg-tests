@@ -23,3 +23,9 @@ avocado run --nrunner-max-parallel-tasks 1 ./cbdctrl.py -m ./cbdctrl.py.data/cbd
 ```
 avocado run --nrunner-max-parallel-tasks 1 ./pcache.py -m ./pcache.py.data/pcache.yaml
 ```
+
+**Execution phase – teafs test**
+
+```
+avocado run --nrunner-max-parallel-tasks 1 ./teafs.py -m ./teafs.py.data/teafs.yaml
+```
