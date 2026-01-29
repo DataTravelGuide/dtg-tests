@@ -41,6 +41,7 @@ test_script: !mux
   misc:
     test_script: "./pcache.py.data/pcache_misc.sh"
   failslab:
+    !filter-only : /run/cache_mode/writeback
     test_script: "./pcache.py.data/pcache_failslab.sh"
   fail_make_request:
     test_script: "./pcache.py.data/pcache_fail_make_request.sh"
