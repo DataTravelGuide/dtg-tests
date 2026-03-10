@@ -72,6 +72,38 @@ while true; do
     sleep 1
 done
 
+
+# Wait for used_segs to stabilize before capturing status_before_remove
+echo "DEBUG: GC completed, waiting for used_segs to stabilize..."
+prev_used_segs=-1
+stable_count=0
+max_wait=60
+waited=0
+
+while [[ $waited -lt $max_wait ]]; do
+    sleep 1
+    status=$(sudo dmsetup status ${dm_name0})
+    read -ra fields <<< "$status"
+    len=${#fields[@]}
+    used_segs=${fields[6]}
+    
+    echo "DEBUG: waited=${waited}s, used_segs=${used_segs}, prev=${prev_used_segs}, stable=${stable_count}"
+    
+    if [[ "$used_segs" == "$prev_used_segs" ]]; then
+        stable_count=$((stable_count + 1))
+        if [[ $stable_count -ge 3 ]]; then
+            echo "DEBUG: used_segs stabilized at ${used_segs} after ${waited}s"
+            break
+        fi
+    else
+        prev_used_segs=$used_segs
+        stable_count=0
+    fi
+    waited=$((waited + 1))
+done
+
+echo "DEBUG: final used_segs=${used_segs}, waited=${waited}s, stable_count=${stable_count}"
+
 status_before_remove=$(sudo dmsetup status ${dm_name0})
 read -ra status_fields <<< "$status_before_remove"
 status_before_len=${#status_fields[@]}
